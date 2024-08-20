@@ -26,6 +26,8 @@ mkdir -p /usr/local/sbin
 mkdir -p /home/alike/configs
 chown alike:alike /home/alike/configs
 chown alike:alike /usr/local/sbin
+mkdir /mnt/ads
+mkdir /mnt/ods
 
 
 wget -qO qs.sh 'https://raw.githubusercontent.com/vtgreybeard/a3/main/host/a3_update.sh' && bash qs.sh -quiet $@
