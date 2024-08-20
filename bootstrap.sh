@@ -24,6 +24,7 @@ USER="alike"
 PASS="alike"
 adduser -D $USER
 echo "$USER:$PASS" | chpasswd
+chsh -s /bin/bash
 addgroup alike sudo
 
 rm a3pkgs.lst
