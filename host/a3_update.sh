@@ -61,12 +61,9 @@ echo
 
 ln -sfn /usr/local/sbin/update_a3.sh /etc/periodic/daily/
 ln -sfn /usr/local/sbin/update-check.sh /etc/periodic/daily/
+ln -sfn /usr/local/sbin/onboot.sh /etc/local.d/onboot.start
 
 echo "0 2 * * *    /usr/local/sbin/docker-clean.sh 2&>1 > /dev/null" | crontab -
-#crontab - <<EOF
-#0 2 * * * /usr/local/sbin/docker-clean.sh 2>&1 > /dev/null
-#0 3 * * * /usr/local/sbin/update-check.sh 2>&1 > /dev/null
-#EOF
 
 if [ ! -f "/home/alike/docker-compose.yml" ]; then
 	echo "Downloading Alike default contigs"
