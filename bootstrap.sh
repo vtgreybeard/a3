@@ -14,6 +14,7 @@ apk add openrc docker
 groupadd sudo
 service docker start
 rc-update add docker default
+rc-update add local default
 cat a3pkgs.lst | xargs apk add
 USER="alike"
 PASS="alike"
