@@ -22,7 +22,7 @@ rc-update add local default
 cat a3pkgs.lst | xargs apk add
 USER="alike"
 PASS="alike"
-adduser -D $USER
+adduser -D -u 1000 -g $USER $USER
 echo "$USER:$PASS" | chpasswd
 chsh -s /bin/bash alike
 addgroup alike sudo
