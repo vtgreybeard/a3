@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ ! -f /etc/alpine-release ]; then
+    echo "This script is intended to run on Alpine Linux only."
+    exit 1
+fi
 
 wget https://raw.githubusercontent.com/vtgreybeard/a3/main/a3pkgs.lst
 
