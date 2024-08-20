@@ -45,6 +45,7 @@ wget -qO /tmp/a3.sys.tgz https://raw.githubusercontent.com/vtgreybeard/a3/main/h
 tar -zxf /tmp/a3.sys.tgz -C /usr/local/sbin/
 dos2unix /usr/local/sbin/makeSupportTar
 mv /usr/local/sbin/bashrc /home/alike/.bashrc
+ln -s /home/alike/.bashrc /home/alike/.bash_profile
 chown alike.alike /home/alike/.bashrc
 if [ -f /usr/local/sbin/sudoers ]; then
 	mv -f /usr/local/sbin/sudoers /etc/
