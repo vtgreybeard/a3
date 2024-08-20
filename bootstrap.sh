@@ -15,14 +15,15 @@ apk add shadow
 apk add findutils
 apk add bash
 apk add openrc docker
-groupadd sudo
+groupadd -g 666 sudo
 service docker start
 rc-update add docker default
 rc-update add local default
 cat a3pkgs.lst | xargs apk add
 USER="alike"
 PASS="alike"
-adduser -D -u 1000 -g $USER $USER
+groupadd -g 1000 $USER
+adduser -G $USER -u 1000 $USER -D
 echo "$USER:$PASS" | chpasswd
 chsh -s /bin/bash alike
 addgroup alike sudo
