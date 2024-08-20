@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 
 wget https://raw.githubusercontent.com/vtgreybeard/a3/main/a3pkgs.lst
