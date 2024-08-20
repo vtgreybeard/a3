@@ -1,37 +1,66 @@
 # alike
-Project for Alike Backup, a BDR solution for XenServer, XCP-ng, and Hyper-V virtualization platforms. Download the prebuilt platform with the Docker 
 
-## Xen Virtual Appliance (A3)
-The simplest and fastest way to get up and running with Alike is to use our pre-made, Alpine Linux based virtual appliance.
-To install, [download the XVA image](https://github.com/quadricsoftware/alike/raw/main/binaries/A3_v1.0.5.xva.zip), and import into your Xen environment
-Boot the VM, follow the command line menu steps to add storage, and start the Alike services.
-Once the Alike services start, switch to the Web UI to continue the setup and get started.
-
-## Prebuilt Docker Images
-Please use the docker-compose example file to set up your container quickly and easily. There are two main images to choose from:
-
-Public Preview (Alike v7.5): 
-quadricsoftware/alike-v7:preview 
-
-Longterm Stable (Alike v7.2): 
-quadricsoftware/alike-v7:LTR
+This is is an attempt to reforge the final Alike Backup (A3) into the preview/unreleased Alike v7.5 that had been in use by beta-testers and partners.
+The A3 host appliance is now available to built from sources (see below), instead of as a pre-built XVA download.
 
 
-## Building from Sources
+Project for Alike Backup, a BDR solution for XenServer, XCP-ng, and Hyper-V virtualization platforms. 
 
-### Java
+## Xen Virtual Appliance (A3) Build steps
+1. Download an [Alpine ISO](https://alpinelinux.org/downloads/) and boot your system with it.
+2. Login with "root" to your Alpine system, then run "setup-alpine" and follow the prompts
+	-Be sure to install Apline to your local disk (eg xvda and "sys" for Xen
+3. Complete the setup and reboot, then login as root and run the following command: 
+`wget -O- https://raw.githubusercontent.com/vtgreybeard/a3/main/bootstrap.sh | sh`
 
-The Java Data Engine manages Alike global data deduplication and can be built with Ant. The "lib" directory contains a jarlist that needs to be satisfied prior to building.
+4. Once the reboot is complete, you may login as the "alike" user, and setup Alike as usual
 
-### Appliance
+## Docker-compose
 
-These PHP 7.5 scripts run from in /usr/local/sbin of the A3 Linux appliance (quadricsoftware/alike-v7) and can also run on any Linux installation. 
+If you know what you are doing, and are familiar with docker, you can use the following docker-compose.yml to make your own Alike container:
 
-### WebUI
-
-The WebUI project is the web root of the Alike PHP/Ajax Web listener. Alike uses Nginx in its reference implementation and use of Nginx is recommended.
-
-### Fuse
-
-These Fuse filesystem components allow instant restore of files and disks through a virtual Fuse filesystem, and are built using make. After building, the resulting executables can be deployed to /usr/local/sbin.
+volumes:
+    cache-dbs:
+    instaboot:
+services:
+    alike:
+        container_name: alike
+        image: alikebackup/a3
+        stop_grace_period: 60s
+        privileged: true
+        init: true
+        restart: always
+        entrypoint: /a3init
+        ports:
+            - "80:80"
+            - "443:443"
+            - "445:445"
+            - "222:22"
+            - "111:111"
+            - "2049:2049"
+            - "2811:2811"
+        tty: true
+        volumes:
+            - "/mnt/ads:/mnt/ads"
+            - "/mnt/ods:/mnt/ods1"
+            - "instaboot:/mnt/instaboot"
+            - "./logs:/home/alike/logs"
+            - "./certs:/home/alike/certs"
+            - "./configs:/home/alike/configs"
+            - "cache-dbs:/home/alike/Alike/remoteDBs"
+        tmpfs:
+            - /home/alike/Alike/temp:uid=1000,gid=33
+            - /home/alike/Alike/DBs:uid=1000,gid=1000,exec
+            - /run:uid=1000,gid=33
+        networks:
+            - alike-net
+        cap_add:
+            - NET_ADMIN
+            - SYS_ADMIN
+        environment:
+            - HOST_BLD=${HOST_BLD:?Please check your /home/alike/.env file}
+            - HOST_IP=${HOST_IP:?Please check your /home/alike/.env file}
+networks:             
+    alike-net:         
+        driver: bridge 
 
