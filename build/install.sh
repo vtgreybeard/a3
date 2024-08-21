@@ -1,0 +1,94 @@
+#!/bin/bash
+
+while true; do
+	echo This will install the A3/Alike software locally.
+	read -p "Do you want to continue? (y/n): " choice
+	case "$choice" in
+	    y|Y ) echo "Continuing..."; break;;
+	    n|N ) echo "Exiting"; exit 0;;
+	    * ) echo "Invalid input. Please enter 'y' or 'n'.";;
+	esac
+done
+
+set -e
+check_os() {
+    if [[ -f /etc/os-release ]]; then
+        . /etc/os-release
+        OS_NAME=$ID
+        OS_VERSION_ID=$VERSION_ID
+	echo "We're a supported os ${VERSION_ID}"
+    else
+        echo "Unsupported OS (Debian or variant required)"
+	echo "Found ${OS_NAME} (${OS_VERSION})"
+        exit 1
+    fi
+}
+
+
+# now do our check
+echo "Checking os now..."
+check_os
+
+
+USER="alike"
+PASS="alike"
+ID=1000
+if ! getent group $ID > /dev/null; then
+	sudo groupadd -g $ID $USER
+fi
+
+if ! id $USER > /dev/null 2>&1; then
+	useradd -u $ID -g $ID -m $USER
+	echo "$USER:$PASS" | sudo chpasswd
+	echo "Password for user $USER set to '$PASS'."
+else
+	echo "User $USER already exists."
+fi
+
+echo "Updating package list..."
+apt update
+apt-get install -qq -y \
+libc6 cron dos2unix rsyslog python3 samba samba-common samba-common-bin samba-dsdb-modules samba-libs samba-vfs-modules \
+openresolv screen shared-mime-info snmpd sqlite3 msmtp inetutils-ping stunnel sudo traceroute util-linux-locales wget \
+xz-utils pv p7zip p7zip-full \
+parted openssh-client openssh-server openssh-sftp-server openssl net-tools wireguard gdisk bindfs \
+nfs-kernel-server nginx lsb-release lsof lz4 kpartx logrotate mono-complete \
+fuse dos2unix curl apt apt-listchanges apt-utils util-linux-locales util-linux vim gawk php php-fpm php-cli php-cgi php-sqlite3 php-curl php-mbstring --no-install-recommends;
+systemctl enable nginx
+systemctl start nginx
+
+
+# Now move onto the Alike software 
+cp ../configs/nginx.conf.etc /etc/nginx/nginx.conf
+
+PHP_VERSION=$(php -r "echo PHP_VERSION;")
+PHP_DIR="/etc/php/${PHP_VERSION%.*}/"
+WWWCONF="${PHP_DIR}fpm/pool.d/www.conf"
+if [[ -f "$WWWCONF" ]]; then
+    sudo sed -i 's/^user = .*/user = alike/' "$WWWCONF"
+else
+    echo "Configuration file $WWWCONF does not exist."
+    exit 1
+fi
+
+mkdir -p /home/alike/configs/
+mkdir -p /home/alike/certs/
+mkdir -p /usr/local/sbin/
+mkdir -p /home/alike/Alike/docroot/
+mkdir -p /mnt/ads
+mkdir -p /mnt/ods1
+ln -s /mnt/ods1 /mnt/ods
+
+cp ../configs/nginx.conf /home/alike/configs/
+cp ../configs/*.pem /home/alike/certs/
+cp -r ../webui/* /home/alike/Alike/docroot/
+mv /home/alike/Alike/docroot/hooks /home/alike/Alike/
+cp ../appliance/* /usr/local/sbin/
+
+chown -R alike:alike /home/alike/Alike
+
+#echo "Upgrading installed packages..."
+#apt upgrade -y
+
+echo "Setup completed successfully!"
+
