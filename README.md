@@ -18,7 +18,7 @@ Project for Alike Backup, a BDR solution for XenServer, XCP-ng, and Hyper-V virt
 ## Docker-compose
 
 If you know what you are doing, and are familiar with docker, you can use the following docker-compose.yml to make your own Alike container:
-
+```yaml
 volumes:
     cache-dbs:
     instaboot:
@@ -64,3 +64,4 @@ networks:
     alike-net:         
         driver: bridge 
 
+```
