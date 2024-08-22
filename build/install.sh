@@ -45,6 +45,8 @@ else
 	echo "User $USER already exists."
 fi
 
+chsh -s /bin/bash alike
+
 echo "Updating package list..."
 apt update
 apt-get install -qq -y \
@@ -75,15 +77,26 @@ mkdir -p /home/alike/configs/
 mkdir -p /home/alike/certs/
 mkdir -p /usr/local/sbin/
 mkdir -p /home/alike/Alike/docroot/
+mkdir -p /home/alike/Alike/bin/
+mkdir -p /home/alike/Alike/java/
+mkdir -p /home/alike/Alike/ext/
+mkdir -p /home/alike/Alike/DBs/
+mkdir -p /home/alike/Alike/remoteDBs/
+mkdir -p /home/alike/Alike/temp/
 mkdir -p /mnt/ads
 mkdir -p /mnt/ods1
-ln -s /mnt/ods1 /mnt/ods
+ln -sf /mnt/ods1 /mnt/ods
+
+dpkg -i ../binaries/xapi-xe_1.249.3-2_amd64.deb
 
 cp ../configs/nginx.conf /home/alike/configs/
 cp ../configs/*.pem /home/alike/certs/
 cp -r ../webui/* /home/alike/Alike/docroot/
-mv /home/alike/Alike/docroot/hooks /home/alike/Alike/
+mv -n /home/alike/Alike/docroot/hooks /home/alike/Alike/
 cp ../appliance/* /usr/local/sbin/
+cp -r ../binaries/java/* /home/alike/Alike/java/
+cp ../binaries/abd.dat.7z /home/alike/Alike/ext/
+cp -r ../binaries/blkfs /usr/local/sbin/
 
 chown -R alike:alike /home/alike/Alike
 
