@@ -20,6 +20,7 @@ add_folder() {
 
 add_folder "appliance/" "/usr/local/sbin/"
 add_folder "webui/" "/home/alike/Alike/docroot/"
+add_folder "hooks/" "/home/alike/Alike/hooks/"
 add_folder "binaries/java/" "/home/alike/Alike/java/"
 
 # These won't be part of the regular updates

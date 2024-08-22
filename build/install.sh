@@ -92,7 +92,7 @@ dpkg -i ../binaries/xapi-xe_1.249.3-2_amd64.deb
 cp ../configs/nginx.conf /home/alike/configs/
 cp ../configs/*.pem /home/alike/certs/
 cp -r ../webui/* /home/alike/Alike/docroot/
-mv -n /home/alike/Alike/docroot/hooks /home/alike/Alike/
+mv -n /home/alike/Alike/hooks /home/alike/Alike/
 cp ../appliance/* /usr/local/sbin/
 cp -r ../binaries/java/* /home/alike/Alike/java/
 cp ../binaries/abd.dat.7z /home/alike/Alike/ext/
