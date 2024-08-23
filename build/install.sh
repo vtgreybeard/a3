@@ -30,7 +30,7 @@ while true; do
 	    n|N ) echo "Exiting"; exit 0;;
 	    * ) echo "Invalid input. Please enter 'y' or 'n'.";;
 	esac
-
+done
 
 
 USER="alike"
@@ -48,6 +48,7 @@ else
 	echo "User $USER already exists."
 fi
 done
+fi
 
 chsh -s /bin/bash alike
 
