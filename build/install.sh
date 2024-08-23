@@ -1,16 +1,11 @@
 #!/bin/bash
 
-while true; do
-	echo This will install the A3/Alike software locally.
-	read -p "Do you want to continue? (y/n): " choice
-	case "$choice" in
-	    y|Y ) echo "Continuing..."; break;;
-	    n|N ) echo "Exiting"; exit 0;;
-	    * ) echo "Invalid input. Please enter 'y' or 'n'.";;
-	esac
-done
-
+silent=false
+if [ "$1" = "-s" ]; then
+    silent=true
+fi
 set -e
+
 check_os() {
     if [[ -f /etc/os-release ]]; then
         . /etc/os-release
@@ -23,11 +18,19 @@ check_os() {
         exit 1
     fi
 }
-
-
-# now do our check
 echo "Checking os now..."
 check_os
+
+if [ "$silent" = false ]; then
+while true; do
+	echo This will install the A3/Alike software locally.
+	read -p "Do you want to continue? (y/n): " choice
+	case "$choice" in
+	    y|Y ) echo "Continuing..."; break;;
+	    n|N ) echo "Exiting"; exit 0;;
+	    * ) echo "Invalid input. Please enter 'y' or 'n'.";;
+	esac
+
 
 
 USER="alike"
@@ -44,6 +47,7 @@ if ! id $USER > /dev/null 2>&1; then
 else
 	echo "User $USER already exists."
 fi
+done
 
 chsh -s /bin/bash alike
 
