@@ -1,0 +1,160 @@
+#!/usr/bin/php -q
+<?php
+
+include_once("/usr/local/sbin/shared_lib");
+include_once("/usr/local/sbin/common_lib");
+
+function usage(){
+	echo "Usage:\n";
+	echo "\t-t <ads|ods> (DataStore Type)\n";
+	echo "\t-s <2|4|6|8> (BlockSize (MB) Default: 4)\n";
+	exit();
+}
+
+$type =-1;
+$bsize =4;
+$which = "s:t:";
+$opts = getopt($which);
+if (isset($opts['s'])) { $bsize = $opts['s']; }
+if (isset($opts['t'])) { $type = $opts['t']; }
+
+if ($type != "ads" && $type !="ods"){
+	echo "Datastore type invalid ($stype)\nPlease choose either ads or ods\n";
+	usage();
+}
+if( !in_array($bsize, [2, 4, 6, 8]) ){
+	echo "Invalid blocksize: $bsize\nPlease choose 2,4,6, or 8\n";
+	usage();
+}
+
+makeDS($type, $bsize);
+
+function makeDS($type, $bsize){
+	$dsBase = "/mnt/ads";
+	if($type == "ods"){ $dsBase = "/mnt/ods"; }
+
+	if(is_dir("$dsBase/blocks")){
+		throw new Exception("$type directory already exists ($dsBase/blocks)");
+	}
+
+	exec("mkdir -p $dsBase",$out, $code);
+	if($code != 0){
+		echo "Failed to create DS path: $dsBase\n";
+		exit(1);
+	}
+
+	$cmd = "sudo chown -R 1000:1000 $dsBase";
+	$res = shell_exec($cmd);
+	$cmd = "mkdir -p $dsBase/blocks";
+	$res = shell_exec($cmd);
+
+	for ($i = 0; $i < 4096; $i++) {
+		$dirName = "$dsBase/blocks/". sprintf('%03x', $i);
+		if (!is_dir($dirName)) {
+			mkdir($dirName, 0777, true);
+		}
+	}
+
+	mkdir("$dsBase/journals");
+	mkdir("$dsBase/validate");
+	$res =file_put_contents("$dsBase/ods.type",trim(base64_decode("Msgeco2dTC9jbwZ/icwUhiw="))	);
+	file_put_contents("$dsBase/owner.id",trim(base64_decode("MDg3YmY4N2MtZjhmNC00YWM0LTNlOTItNGI1NTg3ZmIxNWQ10fe36C6E4fnfF8o6/FZM8w=="))	);
+
+	if($type == "ads"){
+		mkdir("touch $dsBase/ads.dat");
+		mkdir("$dsBase/prodDBs");
+		echo "Making gfs.db\n";
+		makeGfs("$dsBase/prodDBs/gfs.db");
+		echo "Making nimbus.db\n";
+		makeNimbus("$dsBase/prodDBs/nimbusdb.db");
+		echo "Making cache.db\n";
+		makeCache("$dsBase/prodDBs/cache.db");
+
+		$guid = genGuid();
+
+		exec("sqlite3 $dsBase/prodDBs/nimbusdb.db \"insert into settings(name,val) VALUES ('installID', '$guid')\" ");
+		$bs = $bsize * 1024;
+		exec("sqlite3 $dsBase/prodDBs/nimbusdb.db \"insert into settings(name,val) VALUES ('blockSize', '$bs')\" ");
+		exec("sqlite3 $dsBase/prodDBs/nimbusdb.db \"insert into settings(name,val) VALUES ('uiUser', 'alike')\" ");
+		exec("sqlite3 $dsBase/prodDBs/nimbusdb.db \"insert into settings(name,val) VALUES ('uiPass', 'alike')\" ");
+	}
+	exec("chown -R 1000:1000 $dsBase");
+}
+
+function genGuid(){
+        return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+
+}
+
+function makeGfs($dbfile){
+	$gfs = "echo \"CREATE TABLE DBVersion (VersionNum INTEGER);
+		CREATE TABLE gfs (gfsId INTEGER PRIMARY KEY, name VARCHAR UNIQUE);
+		CREATE TABLE gfs_instance (gfsId INTEGER NOT NULL, card INTEGER, versions INTEGER, policy INTEGER);
+		CREATE TABLE gfs_schedule (gfsId INTEGER NOT NULL, scheduleId INTEGER, installId VARCHAR, siteId INTEGER);
+		CREATE TABLE gfs_version (scheduleId INTEGER, installId VARCHAR, siteId INTEGER, epoch INTEGER, uuid VARCHAR);
+		CREATE UNIQUE INDEX gfs_schedule_index ON gfs_schedule (scheduleId, installId, siteId, gfsId);
+		CREATE UNIQUE INDEX gfs_version_index ON gfs_version (epoch, uuid, siteId);
+		CREATE UNIQUE INDEX gfs_instance_index ON gfs_instance (gfsId, policy);\" | sqlite3 $dbfile";
+	echo shell_exec($gfs);
+}
+function makeNimbus($dbfile){
+	$nb = "echo \"CREATE TABLE settings (name VARCHAR(255) PRIMARY KEY, val VARCHAR(10240));
+CREATE TABLE Schedule (scheduleID INTEGER PRIMARY KEY NOT NULL, name VARCHAR,timestamp INTEGER,lastran INTEGER, jobType INTEGER, scheduleType INTEGER, interval INTEGER,occurances INTEGER, username VARCHAR, password VARCHAR, targetPath VARCHAR, virtType INTEGER, deleteFlag INTEGER, runBase INTEGER, isActive INTEGER, numConcurrent INTEGER );
+CREATE TABLE Job (jobID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, scheduleID INTEGER NOT NULL, timeBegin INTEGER,timeEnd INTEGER, sizeOnDisk INTEGER NOT NULL, sizeSent INTEGER NOT NULL, target VARCHAR, status INTEGER, username VARCHAR, password VARCHAR, stage INTEGER, virtType INTEGER, originalSize INTEGER, deleteFlag INTEGER, runBase INTEGER, numConcurrent INTEGER);
+CREATE TABLE Schedule_VMS (scheduleID INTEGER NOT NULL, VMID INTEGER NOT NULL, VM_Version INTEGER);
+CREATE TABLE Schedule_Exts (scheduleID INTEGER NOT NULL, ExtID INTEGER NOT NULL);
+CREATE TABLE Schedule_Dates (scheduleID INTEGER NOT NULL, date INTEGER NOT NULL );
+CREATE TABLE VM (VMID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, VMName VARCHAR, virtTech INTEGER, hostID NOT NULL, deleteFlag INTEGER, maxVersions INTEGER, UUID VARCHAR NOT NULL, poolID VARCHAR NOT NULL, maxVersionsOffsite INTEGER, authProfile INTEGER, accessIP VARCHAR);
+CREATE TABLE VM_Version (VMID INTEGER, VMVersion INTEGER, vmType INTEGER, size INTEGER, timestamp INTEGER, committed int, metaInfo VARCHAR, action INTEGER, processingTime INTEGER, jobID int );
+CREATE TABLE VM_Files (VMID INTEGER, VMVersion INTEGER, filename VARCHAR, fileVersion DOUBLE, fileSize INTEGER, timestamp INTEGER, committed int, deltaSize INTEGER, deltaPostDedup INTEGER );
+CREATE TABLE Job_VMS (jobID INTEGER NOT NULL, VMID INTEGER NOT NULL, VM_Version INTEGER);
+CREATE TABLE version_site (VMID INTEGER, timestamp INTEGER, siteid INTEGER);
+CREATE TABLE version_gfs_cache (VMID INTEGER NOT NULL, Version INTEGER NOT NULL, onsite VARCHAR, offsite VARCHAR);
+CREATE TABLE DBVersion (VersionNum INTEGER);
+CREATE TABLE Licenses (key VARCHAR PRIMARY KEY, licenseVersion INTEGER, edition INTEGER, product INTEGER, flavor INTEGER, quantity INTEGER, lifespan INTEGER, timestamp INTEGER, supportable INTEGER, salt INTEGER, companyName VARCHAR);
+CREATE TABLE Host (hostID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, hostName VARCHAR, virtType INTEGER, username VARCHAR, password VARCHAR, role INTEGER, key VARCHAR, port INTEGER, deleteFlag INTEGER, uuid VARCHAR, poolID VARCHAR, lastUsed INTEGER);
+CREATE TABLE statistics (name VARCHAR(255) PRIMARY KEY, val VARCHAR(10240));
+CREATE TABLE Appliance (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name VARCHAR, uuid VARCHAR, poolID VARCHAR, version INTEGER, ip VARCHAR, netmask VARCHAR, gateway VARCHAR, dns VARCHAR, netID VARCHAR, SRuuid VARCHAR, parentUuid VARCHAR, motion INTEGER, vmOwner INTEGER, publicIP VARCHAR, MAC VARCHAR);
+CREATE TABLE Internals (name VARCHAR(32) PRIMARY KEY, val VARCHAR(256));
+CREATE TABLE ABDNet (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, poolID VARCHAR, ip VARCHAR, netmask VARCHAR, gateway VARCHAR, dns VARCHAR, publicAddress VARCHAR, netID VARCHAR, checkedOut INTEGER, MAC VARCHAR );
+CREATE TABLE ABDImage (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, poolID VARCHAR, uuid VARCHAR, srid VARCHAR, version INTEGER);
+CREATE TABLE AuthProfile (ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name VARCHAR, username VARCHAR, password VARCHAR, context VARCHAR, isDefault INTEGER);
+CREATE TABLE tm_network (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uuid VARCHAR UNIQUE, name VARCHAR, poolid VARCHAR, isShared INTEGER, isDefault INTEGER);
+CREATE TABLE tm_pool (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uuid VARCHAR UNIQUE, name VARCHAR);
+CREATE TABLE tm_vmdisk (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, vmuuid VARCHAR, uuid VARCHAR , name VARCHAR, size INTEGER, position INTEGER);
+CREATE TABLE tm_sr (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uuid VARCHAR UNIQUE, name VARCHAR, poolid VARCHAR, isShared INTEGER, size INTEGER, free INTEGER);
+CREATE TABLE tm_vhost (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, uuid VARCHAR UNIQUE, name VARCHAR, poolid VARCHAR, nativeName VARCHAR, numcpu INTEGER, totalMemory INTEGER, freeMemory INTEGER, osName VARCHAR); \" | sqlite3 $dbfile";
+                shell_exec($nb);
+}
+
+function makeCache($dbfile){
+	$cache = "echo \"CREATE TABLE flag (txNo INTEGER, reconSeq INTEGER, deleteTx INTEGER, ownerTs INTEGER, state INTEGER, siteId INTEGER, deletedBy INTEGER);\" | sqlite3 $dbfile";
+        shell_exec($cache);
+        $cache = "echo \"CREATE VIEW flag_unreconned_vw AS SELECT * FROM flag WHERE reconSeq = 0 AND ((state=2 AND deleteTx != 0) OR (state=3 AND deleteTx = 0));
+CREATE INDEX f_delete_index ON FLAG (deleteTx);
+CREATE INDEX f_recon_index ON FLAG (reconSeq);
+CREATE INDEX f_state_index ON FLAG (state);
+CREATE UNIQUE INDEX f_enforce ON FLAG (siteId,txNo);
+CREATE TRIGGER flag_delete_trigger AFTER INSERT ON flag BEGIN update flag set deletedBy = (SELECT f2.txNo FROM flag f2 WHERE flag.txNo=f2.deleteTx) where new.siteId = siteId; END;\" | sqlite3 $dbfile";
+        shell_exec($cache);
+
+        $cache = "echo \"CREATE TABLE vversion (flagId INTEGER, version VARCHAR, uuid VARCHAR COLLATE NOCASE, name VARCHAR, meta VARCHAR, virtType INTEGER, siteId INTEGER);\" | sqlite3 $dbfile";
+        shell_exec($cache);
+
+        $cache = "echo \"CREATE UNIQUE INDEX version_index ON VVERSION (version, uuid, siteId);
+CREATE INDEX v_uuid_index ON VVERSION (uuid);
+CREATE INDEX v_version_index ON VVERSION (version);
+CREATE UNIQUE INDEX v_site_index ON VVERSION (flagId, siteId);
+CREATE TABLE vversion_disk (versionId INTEGER, size INTEGER, siteId INTEGER);
+CREATE VIEW vversion_vaulted_v AS SELECT vv.* FROM vversion vv, flag f WHERE vv.flagId = f.txNo AND vv.siteId = f.siteId AND f.state > 2 AND f.txNo AND f.deletedBy is null;
+CREATE VIEW vversion_disk_vaulted_v AS SELECT vv.* FROM vversion_disk vv, flag f WHERE vv.versionId= f.txNo AND vv.siteId = f.siteId AND f.state > 2 AND f.deletedBy is null;
+CREATE TABLE both_tables (flagId INTEGER, uuid VARCHAR, timestamp INTEGER, siteid INTEGER);
+CREATE TABLE dsinfo (siteId INTEGER PRIMARY KEY, md5 VARCHAR, timestamp INTEGER, identifier VARCHAR, lastPurge INTEGER, purgeTime INTEGER, lastRecon INTEGER, reconTime INTEGER);
+CREATE TABLE uuid (id INTEGER PRIMARY KEY AUTOINCREMENT, uuid VARCHAR UNIQUE);
+CREATE TRIGGER uuid_trigger AFTER INSERT ON vversion BEGIN INSERT OR IGNORE INTO uuid VALUES (NULL, new.uuid); END;
+CREATE TRIGGER uuid_trigger_d AFTER DELETE ON vversion BEGIN DELETE FROM uuid WHERE uuid NOT IN (SELECT v.UUID FROM vversion v); END;\" | sqlite3 $dbfile";
+        shell_exec($cache);
+
+}
+
+?>

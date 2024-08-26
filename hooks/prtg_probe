@@ -1,0 +1,42 @@
+#!/usr/bin/php -q
+<?php
+include_once("/usr/local/sbin/shared_lib");
+include_once("/usr/local/sbin/manager_lib");
+
+$out = getRecentJobsLocal();
+$num = 0;
+foreach($out as $j){
+        if($j->status == 1 || $j->status ==2){ $num++; }
+}
+
+$tmpl = '<?xml version="1.0" encoding="UTF-8" ?>
+<prtg>
+';
+$tmpl .= "  <result>
+    <channel>Active Jobs</channel>
+    <value>$num</value>
+  </result>\n";
+
+$tmpl .= "<text>Recent Jobs:\n";
+if(count($out) > 0){
+
+        foreach($out as $j){
+                $tmpl .= "ID:$j->jobID, Name: $j->name, Status: $j->status, Progress: $j->progress, Elapsed: $j->timeElapsed \n";
+        }
+}else{
+        $tmpl .= "None\n";
+}
+$tmpl .= "</text>\n</prtg>";
+
+echo $tmpl;
+
+
+
+function getRecentJobsLocal(){
+        $cutoff = time() - (48*60*60);
+        $sql = "SELECT j.*,CASE WHEN j.timeEnd = 0 THEN strftime('%s', 'now') - j.timeBegin ELSE j.timeEnd - j.timeBegin END as timeElapsed, a.name as a3Name from jobs j, a3s a where j.timeBegin > $cutoff order by timeBegin desc limit 5";
+        return dbGet("manager", $sql);
+}
+
+?>
+
