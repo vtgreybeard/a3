@@ -88,6 +88,10 @@ mkdir -p /home/alike/Alike/ext/
 mkdir -p /home/alike/Alike/DBs/
 mkdir -p /home/alike/Alike/remoteDBs/
 mkdir -p /home/alike/Alike/temp/
+mkdir -p /home/alike/Alike/agentShare/
+mkdir -p /mnt/instaboot/
+mkdir -p /mnt/instaboot/base/xen
+mkdir -p /mnt/instaboot/sr/xen
 mkdir -p /mnt/ads
 mkdir -p /mnt/ods1
 ln -sf /mnt/ods1 /mnt/ods
@@ -102,6 +106,8 @@ cp ../appliance/* /usr/local/sbin/
 cp -r ../binaries/java/* /home/alike/Alike/java/
 cp ../binaries/abd.dat.7z /home/alike/Alike/ext/
 cp -r ../binaries/blkfs /usr/local/sbin/
+
+echo "3.85" > /home/alike/a3.rev
 
 chown -R alike:alike /home/alike/Alike
 

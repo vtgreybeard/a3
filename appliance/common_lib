@@ -751,7 +751,7 @@ function getADSDedup(){
 }
 function getADSFree(){
         $raw = trim(shell_exec("/bin/df --block-size=1 /mnt/ads | grep -v ads_raw| grep /mnt/ads | expand -i -t 1 | tr -s \" \"| awk {'print $4'}"));
-        return round($raw );
+        return round(floatval($raw ) );
 }
 function getActStored(){
 	$act =0;

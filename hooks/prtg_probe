@@ -5,10 +5,7 @@ include_once("/usr/local/sbin/manager_lib");
 
 $out = getRecentJobsLocal();
 $num = 0;
-foreach($out as $j){
-        if($j->status == 1 || $j->status ==2){ $num++; }
-}
-
+foreach($out as $j){ if($j->status == 1 || $j->status ==2){ $num++; } }
 $tmpl = '<?xml version="1.0" encoding="UTF-8" ?>
 <prtg>
 ';
@@ -16,10 +13,8 @@ $tmpl .= "  <result>
     <channel>Active Jobs</channel>
     <value>$num</value>
   </result>\n";
-
 $tmpl .= "<text>Recent Jobs:\n";
 if(count($out) > 0){
-
         foreach($out as $j){
                 $tmpl .= "ID:$j->jobID, Name: $j->name, Status: $j->status, Progress: $j->progress, Elapsed: $j->timeElapsed \n";
         }
@@ -27,10 +22,7 @@ if(count($out) > 0){
         $tmpl .= "None\n";
 }
 $tmpl .= "</text>\n</prtg>";
-
 echo $tmpl;
-
-
 
 function getRecentJobsLocal(){
         $cutoff = time() - (48*60*60);

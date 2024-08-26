@@ -61,7 +61,7 @@ function makeDS($type, $bsize){
 	file_put_contents("$dsBase/owner.id",trim(base64_decode("MDg3YmY4N2MtZjhmNC00YWM0LTNlOTItNGI1NTg3ZmIxNWQ10fe36C6E4fnfF8o6/FZM8w=="))	);
 
 	if($type == "ads"){
-		mkdir("touch $dsBase/ads.dat");
+		exec("touch $dsBase/ads.dat");
 		mkdir("$dsBase/prodDBs");
 		echo "Making gfs.db\n";
 		makeGfs("$dsBase/prodDBs/gfs.db");

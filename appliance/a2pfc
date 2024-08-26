@@ -150,7 +150,7 @@ function makeMungeConf(){
 function updateLocalUsers(){
 	$sql = "SELECT val from settings where name='uiPass'";
 	$pass = dbGetColumn("nimbus", $sql);
-	updateUser("alike", $pass);
+//	updateUser("alike", $pass);
 	updateSMBUser("alike", $pass);
 
 	$sql = "SELECT val from settings where name='dataStorePass'";

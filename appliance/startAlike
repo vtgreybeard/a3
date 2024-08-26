@@ -98,13 +98,13 @@ function checkEnv(){
 	if(!file_exists($dir)){ 
 		if(!mkdir($dir)){ myDie("Failed to create directory: $dir\n"); }
 	}
-	exec("chown alike.alike $dir"); 
+	exec("chown alike:alike $dir"); 
 
 	$dir = "/mnt/restore";
 	if(!file_exists($dir)){ 
 		if(!mkdir($dir)){ myDie("Failed to create directory: $dir\n"); }
 	}
-	exec("chown -R alike.alike $dir"); 
+	exec("chown -R alike:alike $dir"); 
 	exec("chmod 777 $dir");
 
 	$dir = "/mnt/Data_In";
@@ -112,7 +112,7 @@ function checkEnv(){
 		if(!mkdir($dir)){ myDie("Failed to create directory: $dir\n"); }
 	}
 	exec("rm -fr /mnt/Data_In/*");
-	exec("chown root.root $dir"); 
+	exec("chown root:root $dir"); 
 	shell_exec("chmod 555 $dir");
 
 
@@ -123,7 +123,7 @@ function checkEnv(){
 	}else{
 		echo "Creating ADS jobs folder\n";
 		if(!mkdir($dir, 0777, true)){ myDie("Failed to create ADS Jobs directory: $dir\n"); }
-		exec("chown -R alike.alike $dir"); 
+		exec("chown -R alike:alike $dir"); 
 	}
 
 	$dir = $GLOBALS["jvPath"];
@@ -134,13 +134,13 @@ function checkEnv(){
 		echo "Cleaning ADS JV folder: $dir\n";
 		exec("rm -f $dir/*");
 	}	
-	exec("chown -R alike.alike $dir"); 
+	exec("chown -R alike:alike $dir"); 
 
 	$dir = $GLOBALS["progPath"];
 	if(!file_exists($dir)){ 
 		if(!mkdir($dir, 0777, true)){ myDie("Failed to create directory: $dir\n"); }
 	}
-	exec("chown -R alike.alike $dir"); 
+	exec("chown -R alike:alike $dir"); 
 
 	$targ = $GLOBALS["ALIKE_HOME"] ."/cbtTemp";
 	$dest = "/mnt/ads/cbtTemp";
@@ -150,7 +150,7 @@ function checkEnv(){
 	}else{
 		exec("rm -fr ".$dest."/*");
 	}
-	exec("chown -R alike.alike $dest"); 
+	exec("chown -R alike:alike $dest"); 
 
 	if(!file_exists($targ)){
 		symlink($dest,$targ);
