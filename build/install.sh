@@ -47,7 +47,6 @@ if ! id $USER > /dev/null 2>&1; then
 else
 	echo "User $USER already exists."
 fi
-done
 fi
 
 chsh -s /bin/bash alike
@@ -67,6 +66,7 @@ systemctl start nginx
 
 # Now move onto the Alike software 
 cp ../configs/nginx.conf.etc /etc/nginx/nginx.conf
+cp ../configs/smb.conf /etc/samba/smb.conf
 
 PHP_VERSION=$(php -r "echo PHP_VERSION;")
 PHP_DIR="/etc/php/${PHP_VERSION%.*}/"
