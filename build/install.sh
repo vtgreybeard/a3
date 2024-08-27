@@ -116,3 +116,5 @@ chown -R alike:alike /home/alike/Alike
 
 echo "Setup completed successfully!"
 
+echo "Welcome to the A3" > /etc/issue
+
