@@ -1,0 +1,6 @@
+MAILTO=""
+*/5 * * * * /usr/local/sbin/frequentSchedTasks	> /dev/null 2>&1
+0 23 * * * /usr/local/sbin/userSchedTasks > /tmp/cron.usertasks 2>&1
+* * * * * /home/alike/Alike/hooks/scheduler >> /tmp/scheduler.log
+*/30 * * * * /home/alike/Alike/hooks/gatherMeta > /tmp/targetmanager.log 2>&1
+
