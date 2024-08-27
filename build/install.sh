@@ -80,6 +80,7 @@ fi
 
 mkdir -p /home/alike/configs/
 mkdir -p /home/alike/certs/
+mkdir -p /home/alike/logs/
 mkdir -p /usr/local/sbin/
 mkdir -p /home/alike/Alike/docroot/
 mkdir -p /home/alike/Alike/bin/
@@ -98,10 +99,15 @@ ln -sf /mnt/ods1 /mnt/ods
 
 dpkg -i ../binaries/xapi-xe_1.249.3-2_amd64.deb
 
+echo "Installing crontab"
+/usr/bin/crontab -u alike ../appliance/alike_crontab;
+
 cp ../configs/nginx.conf /home/alike/configs/
 cp ../configs/*.pem /home/alike/certs/
 cp -r ../webui/* /home/alike/Alike/docroot/
-mv -n /home/alike/Alike/hooks /home/alike/Alike/
+if [ -d "/home/alike/Alike/hooks" ]; then
+	mv -n /home/alike/Alike/hooks /home/alike/Alike/
+fi
 cp ../appliance/* /usr/local/sbin/
 cp -r ../binaries/java/* /home/alike/Alike/java/
 cp ../binaries/abd.dat.7z /home/alike/Alike/ext/
@@ -109,7 +115,9 @@ cp -r ../binaries/blkfs /usr/local/sbin/
 
 echo "3.85" > /home/alike/a3.rev
 
-chown -R alike:alike /home/alike/Alike
+chown -R alike:alike /home/alike
+chmod 755 /usr/local/sbin/appliance/*
+chmod 755 /home/alike/Alike/hooks/*
 
 #echo "Upgrading installed packages..."
 #apt upgrade -y

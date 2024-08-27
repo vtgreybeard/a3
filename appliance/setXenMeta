@@ -7,7 +7,7 @@ include_once("insta_common");
 include_once("engine_common");
 
 
-//  echo shell_exec("sudo /usr/local/sbin/startAlike");
+//  echo shell_exec("sudo /usr/local/sbin/startEngine");
 // exec("touch /home/alike/Alike/agentShare/seed");
 
 $me = pathinfo(__FILE__, PATHINFO_FILENAME);

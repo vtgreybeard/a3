@@ -5,9 +5,6 @@ include_once("/usr/local/sbin/shared_lib");
 $GLOBALS["xe_cmd"] = "/usr/bin/xe";
 $GLOBALS["xe_bad"] = array("Unable to contact server", "Authentication failed", "Error code:", "You cannot make regular API calls directly on");
 
-//  echo shell_exec("sudo /usr/local/sbin/startAlike");
-// exec("touch /home/alike/Alike/agentShare/seed");
-
 /*
  * Please gimmi the hostID of the Xen guy you wanna talk to
  */

@@ -13,7 +13,7 @@ function logger($lvl, $msg){
 
 function manageServices($desiredState){
 	if($desiredState=="start"){
-		exec("sudo /usr/local/sbin/startAlike > /tmp/web_start");
+		exec("sudo /usr/local/sbin/startEngine > /tmp/web_start");
 	}else{
 		exec("sudo /usr/local/sbin/stopAlike --no-web > /tmp/web_stop");
 	}

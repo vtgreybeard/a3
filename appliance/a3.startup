@@ -17,8 +17,10 @@ exec("/sbin/sysctl fs.protected_regular=0");
 
 $def = "/home/alike/defaults";
 exec("cp -n $def/configs/nginx.conf /home/alike/configs/");
-exec("cp -n $def/certs/fullchain.pem /home/alike/certs/");
-exec("cp -n $def/certs/privkey.pem /home/alike/certs/");
+exec("cp -f /home/alike/configs/smb.conf /etc/samba/");
+if(!file_exists("/home/alike/certs/privkey.pem")){
+	exec("openssl req -x509 -newkey rsa:4096 -keyout /home/alike/certs/privkey.pem -out /home/alike/certs/fullchain.pem -sha256 -days 36500 -nodes -subj \"/ST=region/L=City/O=Alike Backup/OU=IT/CN=a3.local\"");
+}
 
 exec("mkdir -p /home/alike/logs");
 
@@ -42,15 +44,13 @@ exec("mkdir -p /tmp/job_ctl");
 exec("chown alike:alike /tmp/job_ctl");
 
 echo shell_exec("/etc/init.d/rpcbind start");
-if($useGanesha == false) {
-	syslog(LOG_INFO, "Using NFS kernel services");
-        $res = shell_exec("/etc/init.d/nfs-kernel-server start");
-        echo $res;
-        if(strpos($res, "no support in current kernel") !== false){
-                echo "Failed to load NFS kernel module!\n";
-                echo "Please ensure Docker host has NFS support configured correctly.\n";
-                exit(1);
-	}
+syslog(LOG_INFO, "Using NFS kernel services");
+$res = shell_exec("/etc/init.d/nfs-kernel-server start");
+echo $res;
+if(strpos($res, "no support in current kernel") !== false){
+	echo "Failed to load NFS kernel module!\n";
+	echo "Please ensure NFS support configured correctly.\n";
+	exit(1);
 }
 
 echo "Restoring DBs from ADS\n";
@@ -108,7 +108,7 @@ echo shell_exec("/usr/bin/crontab -u alike $ct");
 if(file_exists($ct)){ unlink($ct); }
 
 echo "Starting Alike services...";
-exec("/usr/local/sbin/startAlike --no-bks");
+exec("/usr/local/sbin/startEngine");
 exec("chmod 755 /run/php");
 echo "Alike Service Startup complete.\n";
 

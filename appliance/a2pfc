@@ -24,7 +24,7 @@ function usage(){
         die("Please choose: pre or post\n");
 }
 
-# Pre is run before startAlike since java has needs
+# Pre is run before startEngine since java has needs
 if($mode == "pre"){
 	checkADSShare();
 	// set smb passwords
