@@ -2,6 +2,7 @@
 <?php
 
 include_once("/usr/local/sbin/common_lib");
+include_once("/usr/local/sbin/common_lib");
 include_once("/usr/local/sbin/shared_lib");
 
 
@@ -15,7 +16,7 @@ if(amRoot()==false){
 try{
 
 	$doWS=true;
-	if(strpos(join($argv, " "), "--no-web") !== false) { $doWS=false; }
+	if(strpos(join(" ", $argv), "--no-web") !== false) { $doWS=false; }
 
 	$res=0;
 

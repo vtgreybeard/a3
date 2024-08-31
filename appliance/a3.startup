@@ -4,12 +4,23 @@
 echo "Starting A3 Node\n";
 
 $ADS="/mnt/ads";
-if (file_exists("$ADS/ads.dat") == false){
-	echo "No valid ADS found!\n";
-	echo "Please create/attach a valid ADS!\n";
-	exit(1);
-}
 
+$adsMnt = "/home/alike/configs/mount-ads.sh";
+if(file_exists($adsMnt)){
+	$res = shell_exec($adsMnt);
+	echo "Mounting ADS from script ($adsMnt)\n";
+	echo "Mount results: $res\n";
+}else{
+	echo "No ADS Mount script found!\n";
+}
+$odsMnt = "/home/alike/configs/mount-ods.sh";
+if(file_exists($odsMnt)){
+	$res = shell_exec($odsMnt);
+	echo "Mounting ODS from script ($odsMnt)\n";
+	echo "Mount results: $res\n";
+}else{
+	echo "No ODS Mount script found\n";
+}
 
 echo "Setting kernel parameters\n";
 echo "Adding Debian specific fixup\n";
@@ -42,6 +53,20 @@ exec("mkdir -p /tmp/wscache");
 exec("chown alike:alike /tmp/wscache");
 exec("mkdir -p /tmp/job_ctl");
 exec("chown alike:alike /tmp/job_ctl");
+exec("chgrp -R alike /home/alike/logs");
+exec("chmod g+w /home/alike/logs");
+echo "Setting unix socket permissions\n";
+exec("chown alike /run/php");
+exec("mkdir -p /mnt/vms");
+exec("mkdir -p /mnt/hosts");
+exec("chmod 775 /mnt/vms");
+exec("chmod 775 /mnt/hosts");
+echo "Configuring scheduled tasks\n";
+exec("su - alike -c '/usr/local/sbin/frequentSchedTasks'");
+echo "Installing crontab\n";
+$ct = "/usr/local/sbin/alike_crontab";
+echo shell_exec("/usr/bin/crontab -u alike $ct");
+if(file_exists($ct)){ unlink($ct); }
 
 echo shell_exec("/etc/init.d/rpcbind start");
 syslog(LOG_INFO, "Using NFS kernel services");
@@ -53,6 +78,12 @@ if(strpos($res, "no support in current kernel") !== false){
 	exit(1);
 }
 
+if (file_exists("$ADS/ads.dat") == false){
+	echo "No valid ADS found!\n";
+	echo "Please create/attach a valid ADS!\n";
+	exit(1);
+}
+
 echo "Restoring DBs from ADS\n";
 # clean out any random stale wal/shm files to prevent false malformed errors
 exec("rm -f /mnt/ads/prodDBs/*.db-wal");
@@ -61,13 +92,9 @@ exec("rm -f /mnt/ads/prodDBs/*.db-shm");
 exec("cp -f /mnt/ads/prodDBs/* /home/alike/Alike/DBs/");
 exec("chown -R alike:alike /home/alike/Alike/DBs");
 exec("ln -sf /mnt/ads/cbtTemp /home/alike/Alike/cbtTemp");
-exec("chgrp -R alike /home/alike/logs");
-exec("chmod g+w /home/alike/logs");
-echo "Setting unix socket permissions\n";
-exec("chown alike /run/php");
+
 $id = setInstallID();
 echo "Alike InstallID: $id\n";
-
 $hostIP = getSetting("hostIP");
 
 if(empty($hostIP)){
@@ -95,17 +122,6 @@ runAndTail($cmd);
 echo "Setting up NFS SR\n";
 exec("/usr/local/sbin/setupNfs");
 
-exec("mkdir -p /mnt/vms");
-exec("mkdir -p /mnt/hosts");
-exec("chmod 775 /mnt/vms");
-exec("chmod 775 /mnt/hosts");
-
-echo "Configuring scheduled tasks\n";
-exec("su - alike -c '/usr/local/sbin/frequentSchedTasks'");
-echo "Installing crontab\n";
-$ct = "/usr/local/sbin/alike_crontab";
-echo shell_exec("/usr/bin/crontab -u alike $ct");
-if(file_exists($ct)){ unlink($ct); }
 
 echo "Starting Alike services...";
 exec("/usr/local/sbin/startEngine");

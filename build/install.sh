@@ -133,6 +133,29 @@ mkdir -p /mnt/instaboot/sr/xen
 mkdir -p /mnt/ads
 mkdir -p /mnt/ods1
 ln -sf /mnt/ods1 /mnt/ods
+touch /mnt/ads/nods
+touch /mnt/ods1/nods
+
+if [[ -f "/usr/local/sbin/goofys" ]]; then
+	wget https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -O /usr/local/sbin/goofys
+	chmod 755 /usr/local/sbin/goofys
+fi
+
+echo "Configuring startup scripts"
+tee "/etc/systemd/system/a3.service" > /dev/null << EOF
+[Unit]
+Description=A3 Startup
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/a3.startup
+
+[Install]
+WantedBy=multi-user.target
+EOF
+systemctl enable a3.service
 
 dpkg -i ../binaries/xapi-xe_1.249.3-2_amd64.deb
 

@@ -361,6 +361,8 @@ function pickIP(){
 }
 
 function checkNFSSec($list, $ip){
+	if($list == "*"){ return true; }
+
     $ipArray = explode(',', $list);
     foreach ($ipArray as $entry) {
         $entry = trim($entry);
@@ -368,9 +370,10 @@ function checkNFSSec($list, $ip){
         // Check if the entry is an IP or a subnet
         if (filter_var($entry, FILTER_VALIDATE_IP)) {
             // Check if the localIP matches the specific IP
-            if ($localIP === $entry) {
+            if ($ip === $entry) {
                 return true;
-            }
+            }else if($entry == "*"){ return true; }
+
         } elseif (strpos($entry, '/') !== false){
 
             // Check if localIP is in the specified subnet
