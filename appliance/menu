@@ -370,8 +370,8 @@ function doServiceState(){
 		if($mode ==0){
 			echo "Starting Alike Manager, please wait...";
 		}else{
-			if(!checkEnvs()){
-				echo "Cancelling start due to failed environment check.\n";
+			if(!haveADS()){
+				echo "Cannot start without an ADS!\n";
 				echo "Press any key to continue.\n";
 				$resp = trim(fgets(STDIN));
 				return;
@@ -383,13 +383,13 @@ function doServiceState(){
 }
 
 function haveADS(){
-	if(file_exists("/mnt/ads/nods") || !is_dir("/mnt/ads/journals") ){
+	if(file_exists("/mnt/ads/nods") || !is_dir("/mnt/ads/blocks") ){
 		return false;
 	}
 	return true;
 }
 function haveODS(){
-	if(file_exists("/mnt/ods/nods") || !is_dir("/mnt/ods/journals") ){
+	if(file_exists("/mnt/ods1/nods") || !is_dir("/mnt/ods/blocks") ){
 		return false;
 	}
 	return true;
@@ -513,6 +513,14 @@ function fixDB($dbFile){
 }
 
 function configDS($dsType){
+
+	// check
+	if($dsType == "ads" && haveADS()){
+		echo "Existing ADS already found.  Do you want to change your ADS?\n";
+		$resp = getChoice(); 
+		if($resp != "y"){ return; }
+	}
+
 	$dsLabel = strtoupper($dsType);
 	$dsDesc = "Local Backups";
 	if($dsType == "ods"){ $dsDesc = "Offsite Backups"; }

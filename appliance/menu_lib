@@ -98,12 +98,16 @@ function getCurrentDS($type){
 
 	$cmd = "mount | grep $t | awk {'print $1'}";
 	$ads->path = str_replace('\040', " ", trim(shell_exec($cmd)) );
+	if(empty($ads->path)){
+		$ads->type = "Local Folder";
+		$ads->path = "/mnt/ads";
+		$ads->free = trim(shell_exec("df -h /mnt/ads | grep -v Filesystem | awk {'print $4'}") );
+		return $ads;
+	}
 
 	$cmd = "mount | grep $t | awk {'print $5'}";
 	$ads->type = strtoupper(trim(shell_exec($cmd)) );
 	if($ads->type == "FUSE"){ $ads->type = "S3 Compatible"; }
-
-
 
 	return $ads;
 }
@@ -313,27 +317,6 @@ function getAllIPs(){
                 $ips[] = $ip;
         }
         return $ips;
-}
-
-function getEnvs(){
-        $env = "/home/alike/.env";
-        $envs = [];
-        $lines = explode(PHP_EOL, @file_get_contents($env));
-        foreach ($lines as $line) {
-                $pair = explode('=', trim($line));
-                if (count($pair) == 2) {
-                        $key = trim($pair[0]);
-                        $value = trim($pair[1]);
-                        $envs[$key] = $value;
-		}
-        }
-        return $envs;
-}
-function checkEnvs(){
-
-	// we should check if there is an ADS or not
-
-	return true;
 }
 
 
