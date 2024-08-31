@@ -1389,6 +1389,7 @@ function isOfflineSub(){
 
 
 function checkSbState($sess){
+	return;	
         $sbFile = "/tmp/sb_sess.conf";
 
         $amConnected=false;

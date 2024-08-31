@@ -388,7 +388,8 @@ function deleteABDFromXen($id){
 		return false;
 	}
 	gen_log(LOG_INFO, "Deleting ABD ID $id");
-	$res = trim(xen_call("vm-destroy uuid=\"$abd->uuid\""));
+	deleteVmXen($abd->uuid, true);
+	//$res = trim(xen_call("vm-destroy uuid=\"$abd->uuid\""));
 }
 
 function haltABD($id, $purge=false){
@@ -700,79 +701,6 @@ function cullABDs($hostId){
 	
 	echo "Cleaning out Xen and local DB...\n";
 	dropABDs();	// deletes all and checks in IPs
-
-	echo "Cleaning out local SR...\n";
-	// this is the dangerous part
-
-	$sr = "$nfsBase/base/xen/$reservedSrId";
-	echo "Scanning $sr\n";
-
-	$baseFile = "$sr/$abdBase.vhd";
-	if(!file_exists($baseFile)){
-		echo "ABD VHD not found! Expecting:\n";
-		echo "$baseFile\n";
-		return;
-	}
-	$inf = xen_vdiMeta($baseFile);
-	if($inf["type"] == 3){
-		gen_log(LOG_INFO, "No SR cleanup needed.  No avhds have been made from base vhd.");
-		return;
-	}
-
-	// Now we know we have avhds to descent
-	$actualBase = basename($inf["pPath"], ".vhd");
-	echo "Actual Base file: $actualBase \n";
-	echo "Orig Base file: $abdBase \n\n";
-	
-	$vdis = array();	// this will hold all the ABD related vhds
-
-	$files = glob("$sr/*.vhd", GLOB_BRACE);
-	echo "Looping through all VHDs in SR...\n";
-	foreach($files as $file) {
-		$vdi =  basename($file, ".vhd");
-		if($vdi == $abdBase){
-			echo "We found the original base! $abdBase\n";
-			array_push($vdis, $vdi);
-		}else if($vdi == $actualBase){
-			echo "We found the actual base! $actualBase\n";
-			array_push($vdis, $vdi);
-		}else{
-			try{
-				$meta = xen_vdiMeta($file);
-				if($meta["type"] != 3){
-					$par = basename($meta["pPath"], ".vhd");
-					if($par == $actualBase || $par == $abdBase){
-						echo "ABD File: $file $vdi\n";
-						array_push($vdis, $vdi);
-					}
-				}
-			}catch(Exception $ex){
-				gen_log(LOG_ERR_NOFAIL,"Xen error: ". $ex->getMessage() );
-			}
-		}
-	}
-
-	$out = findVMsFromVdis($vdis);
-
-	// this will delete the ABDs and templates
-	
-	// now go to xen and find/kill anyone using our ABD VHDs
-	foreach($out as $h){
-		xen_connect($h["host"]);	
-		foreach($h["vms"] as $vm){
-			echo "Destroying: ". $vm["name"] ."\n";
-			$res = xen_call("vm-destroy uuid=".$vm["vm"]);
-			print_r($res);
-		}
-	}
-
-	foreach($vdis as $v){
-		$testo = "$sr/$v.vhd";
-		if(file_exists($testo)){
-			exec("rm $testo");
-		}
-	}
-	// to recover from this, we will need to re-import from abdAdmin to get the ABD VHD back in the SR
 }
 
 function findVMsFromVdisOnHost($vdis, $h){
@@ -847,13 +775,6 @@ function importABD($hostId){
 			echo "Connecting to hostid: $hid\n";
 			xen_connect($hid);
 			$h = getHost($hid);
-			if(!hasInstaSr()){
-				plugInstaSr($hid, $h->uuid);
-				scanSr($hid);
-			}
-			if(!hasInstaSr()){
-				throw new Exception("Could not Plug Alike SR to host: $hid");
-			}
 			gen_log(LOG_INFO, "ABD import for $hid");
 			doPoolImport($hid);
 		}
@@ -867,21 +788,10 @@ function getABDVhdUuid(){
 }
 
 function getAbdTemplateName(){
-	global $reservedSrId;;
-	$abdName = "A3 ABD Template_" . substr($reservedSrId, -4);
+	$abdName = "A3 ABD Template_7.5";
 	return $abdName;
 }
 
-function findAndDestroyTemplates(){
-	$name = getAbdTemplateName();
-	$q = "template-list name-label=\"$name\"";
-	$res = json_decode(parse_xen_result(trim(xen_call($q))));
-	foreach($res as $r){
-		gen_log(LOG_WARNING, "Removing pre-exising ABD template: $r->uuid");
-		$q = "template-uninstall template-uuid=$r->uuid force=true";
-		xen_call($q);
-	}
-}
 function checkForExistingTemplate(){
 	$name = getAbdTemplateName();
         $q = "template-list name-label=\"$name\"";
@@ -910,63 +820,44 @@ function validateTemplate($uuid){
         $cmd = "vbd-list vm-uuid=$uuid";
         $res = trim(xen_call($cmd));
         $inf = json_decode(parse_xen_result($res), true);
-        $vdi = $inf[0]["vdi-uuid"];
-	if(empty($vdi)){
+	if(!isset($inf[0]) || empty($inf[0]["vdi-uuid"])){
 		throw new Exception("ABD Template has no VDI!");
 	}
-
-
-//	$cmd = " vdi-list vbd-uuids=". $inf[0]->VBDs;
-//        $res = trim(xen_call($cmd));
-//        $inf = json_decode(parse_xen_result($res), false);
-//	if(empty($inf[0]->uuid)){
-//		throw new Exception("ABD Template has no VDI!");
-//	}
-//	$vdi = $inf[0]->uuid;
-	global $reservedSrId;
-	$fp = "/mnt/instaboot/sr/xen/$reservedSrId/$vdi".".vhd";
-	if(!file_exists($fp)){
-		throw new Exception("Local Alike SR has no ABD template VHD.  Re-import the template, or restart the A3 to correct this.");
-	}
+        $vdi = $inf[0]["vdi-uuid"];
 	return true;	
 }
 
 function doPoolImport($hostId){
-	global $reservedSrId;;
-	$srId = $reservedSrId;
 
 	$h = getHost($hostId);
-
 	xen_connect($hostId);
+
+	$srId = trim(xen_call("pool-param-get", "param-name=default-SR", "uuid=$h->poolID" ));	// use the pool's default SR
+
 	$temps = checkForExistingTemplate();
         if(!empty($temps)){
 		try{
 			validateTemplate($temps[0]->uuid);
 		}catch(Exception $ex){
-			array_push($temps, new stdClass());     // make it kill things if we have a bad template
+			deleteVmXen($temps[0]->uuid, true);
+			array_shift($temps); // get rid of the dead template
 		}
         }
 
-	if($temps !== false){
-		if(count($temps) ==1){
+	if($temps !== false && !empty($temps)){
+		if(count($temps) > 0){
 			$tempUuid = $temps[0]->uuid;
 			gen_log(LOG_INFO, "Xen Pool already has an ABD Template ($tempUuid). Refreshing DB.");
 			setABDImage($tempUuid, $h->poolID, $srId, 25);
-			return;
-		}else{
-			gen_log(LOG_WARNING, "Multiple ABD templates found in pool ($h->poolID).  Cleaning up now.");
-			$res = deleteIdleABDs($h->poolID);
-			if($res ==1){
-				gen_log(LOG_ERR, "Failed to remove running ABD(s).  Are they part of a running job?");
-				return;
-			}
-			findAndDestroyTemplates();
 		}
+		if(count($temps) > 1){
+			gen_log(LOG_WARNING, "Multiple ABD templates found in pool ($h->poolID).  We selected the first available.");
+		}
+		return;
 	}else{
 		gen_log(LOG_INFO, "No ABD template found in pool.  Deploying now.");
 	}
 
-	$vhdUuid = getABDVhdUuid();
 
 	$abdDesc = "\"Template for the A3 ABDs\"";
 	# Configurable settings for the ABDs
@@ -984,21 +875,6 @@ function doPoolImport($hostId){
 	);
 
 
-	//gen_log(LOG_WARNING, "A3 SR not found on host.  Plugging in...");
-	plugInstaSr($hostId, $h->uuid);	
-
-	try{
-		if(!plugSrPbds()){
-			gen_log(LOG_ERR_NOFAIL, "A3 SR not properly initialized.  Please check logs for details");
-			return;
-		}
-	}catch(Exception $ex){
-		gen_log(LOG_ERR_NOFAIL, "A3 SR has errors: ". $ex->getMessage());
-		return;
-	}
-
-	copyVhdIfNeeded($vhdUuid, $srId);	// copys the vhd and scans the sr as needed
-	if(!vdiExists($vhdUuid)){ throw new Exception("Xen could not find ABD template VHD after scan"); }
 
 	$abdName = getAbdTemplateName();
 	gen_log(LOG_DEBUG, "ABD Template name: $abdName ");
@@ -1010,8 +886,12 @@ function doPoolImport($hostId){
 		throw new Exception("Cannot create a new VM on SR $srId, Xen returned $rez");
 	}else if(strpos($rez, "No templates matched") !== false){
                 throw new Exception("Failed to provision ABD from template: $rez");
+	}else if(empty($rez)){
+                throw new Exception("Failed to create ABD template. Xen provided no error.");
         }
 	$uuid = $rez;
+	$vhdUuid = importABDVhd($uuid, $srId);	// copys the vhd and scans the sr as needed
+	if(!vdiExists($vhdUuid)){ throw new Exception("Xen could not find ABD template VHD after import"); }
 
 	$rez = xen_call("vm-param-set", "uuid=$uuid", "is-a-template=true" );
 	gen_log(LOG_INFO, "ABD Template created with UUID: $uuid ");	
@@ -1035,7 +915,6 @@ function doPoolImport($hostId){
 		gen_log(LOG_WARNING, "cannot create a new VIF for VM $uuid, Xen returned $rez");
 	}
 
-	$rez = xen_call("sr-scan uuid=$srId");
 	gen_log(LOG_DEBUG, "Attaching VHD ($vhdUuid) to ABD ($uuid) $rez");
 	try{
 		attachDiskToVmXen($uuid, $vhdUuid, true, 0);
@@ -1076,26 +955,23 @@ function guessAXenNetwork() {
 	}
 	return $good_uuids[0];
 }
-function copyVhdIfNeeded($vhdUuid, $srId){
-	echo "COPYING ABD VHD\n";
-	$abdFile = "/home/alike/Alike/ext/abd.dat.7z";
-	$vhdFile = $vhdUuid.".vhd";
-	$vhdPath = "/mnt/instaboot/sr/xen/$srId";
-	$full = "$vhdPath/$vhdFile";
-	//  ABD's VHD is missing from the SR Share. Copy it up for us, please
-	if(!file_exists("$full")){
-		echo "Copying ABD image to NFS SR\n";
-		exec("7za e $abdFile -o$vhdPath/");
-		exec("mv $vhdPath/0.vhd $full");
-		exec("chown nobody:nogroup $full");
-		exec("chmod 664 $full");
-		echo "Requesting Xen SR Scan of NFS SR\n";
-		$rez = xen_call("sr-scan uuid=$srId");
-		$res =xen_call("vdi-param-set uuid=$vhdUuid name-label='A3 ABD System Disk'") ;
-		echo "Copied ABD VHD and Finished scanning SR ($rez) $res\n";
-	}else{
-		echo "ABD Image exists in SR\n";
+function importABDVhd($vmUuid, $srId){
+	echo "Importing ABD VHD to $srId\n";
+	$abdZip = "/home/alike/Alike/ext/abd.dat.7z";
+	$abdFile = "/home/alike/Alike/ext/abd.vhd";
+	if(!file_exists($abdFile)){
+		echo "Extracting ABD image \n";
+		exec("7za e $abdZip -o/home/alike/Alike/ext/");
+		exec("mv /home/alike/Alike/ext/0.vhd $abdFile");
 	}
+	if(!file_exists($abdFile)){
+		throw new Exception("Failed to extract ABD template!");
+	}
+	$size = 256 * 1024 * 1024;
+	$vhdUuid = createVdiForVm($vmUuid, $size, $srId, 'A3 ABD System Disk v7.5', '');
+	$res = uploadVhd($abdFile, $vhdUuid);
+	$rez = attachDiskToVmXen($vmUuid,$vhdUuid, false, 0);
+	return $vhdUuid;
 }
 function logWarningOnNonEmpty($rez, $deets) {
 	 if(empty(trim($rez)) == false) {

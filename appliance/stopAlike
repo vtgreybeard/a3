@@ -2,7 +2,6 @@
 <?php
 
 include_once("/usr/local/sbin/common_lib");
-include_once("/usr/local/sbin/common_lib");
 include_once("/usr/local/sbin/shared_lib");
 
 

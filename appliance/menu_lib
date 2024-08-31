@@ -2,33 +2,12 @@
 
 
 // menu stuff
-function getYN($quiet=false){
-	if($quiet ==false){
-	        echo "Continue? (y/N): ";
-	}
-        $resp = trim(fgets(STDIN));
-        if (strcasecmp($resp, "y") == 0) { return true; }
-        return false;
-}
-function getChoice($timeout=null){
-	echo "Your choice: ";
-        $read = array(STDIN);
-	$write = array();
-	$except = array();
-	$rez = stream_select($read, $write, $except, $timeout);
-	if($rez === 0) {
-		return "";
-	}
-	$resp = trim(fgets(STDIN));
-        stream_set_timeout(STDIN, 0);
-	return $resp;
-}
 function getEntry(){
         echo "# ";
         $resp = trim(fgets(STDIN));
         return $resp;
 }
-function getPassword() {
+function getPasswordStr() {
         $oldStyle = shell_exec('stty -g');
         shell_exec('stty -icanon -echo min 1 time 0');
         $password = '';
@@ -52,62 +31,9 @@ function getPassword() {
         return $password;
 }
 
-function opt($txt){
-        echo "\033[1;33m$txt\033[0m)";
-}
-
-function setupSigHandlers(){
-        // remember to add this line to the top of the script:
-        // declare(ticks = 1);
-
-        // setup signal handlers
-        pcntl_signal(SIGTERM, "sig_handler");
-        pcntl_signal(SIGHUP,  "sig_handler");
-        pcntl_signal(SIGUSR1, "sig_handler");
-        pcntl_signal(SIGINT, "sig_handler");
-        pcntl_signal(SIGTSTP, "sig_handler");
-        //pcntl_signal(SIGSTOP, "sig_handler");
-}
-function sig_handler($signo) {
-     switch ($signo) {
-         case SIGSTOP:
-             echo "Caught SIGSTOP...\n";
-                if($GLOBALS["breakable"]==1){ exit; }
-             break;
-         case SIGTSTP:
-             break;     // ctrl-z
-         case SIGINT:
-                if($GLOBALS["breakable"]==1){ exit; }
-             break;     // ctrl-c
-         case SIGTERM:
-                if($GLOBALS["breakable"]==1){ exit; }
-             break;
-         case SIGHUP:
-                if($GLOBALS["breakable"]==1){ exit; }
-             break;
-         case SIGUSR1:
-             break;
-         default:
-     }
-}
-function run($cmd){
-        if( ($fp = popen("$cmd", "r")) ) {
-            while( !feof($fp) ){
-                echo fread($fp, 1024);
-                flush(); // you have to flush buffer
-            }
-            fclose($fp);
-        }
-}
-
-
 function getIP(){
-	$cmd = "ifconfig eth0| grep \"inet addr\" | tr -s \":\" \" \" | awk {'print $3'} ";
+	$cmd = "hostname -I";
 	return trim(shell_exec($cmd));
-}
-function getDNS(){
-	$cmd = "cat /etc/resolv.conf | grep nameserver | awk {'print $2'}";
-	return explode("\n",trim(shell_exec($cmd)));
 }
 
 function isDHCP(){
@@ -182,29 +108,20 @@ function getCurrentDS($type){
 	return $ads;
 }
 
-function getDockerStatus(){
+function getSvcStatus(){
 	$mode = getNodeMode();
-	$cmd = "sudo docker ps | grep alike-v7 | wc -l";
-	$isRunning = trim(shell_exec($cmd));
+
+        $cmd = "pgrep blockvaulter";
+        $isRunning = trim(shell_exec($cmd));
 	if($mode ==0){ return $isRunning; }
 
-	if($isRunning){
-		$tries=5;
-		while(!file_exists("/mnt/ads/docker.up")){
-			sleep(1);
-			$tries--;
-			if($tries <=0){ return false; }
-		}
-		if (file_exists("/mnt/ads/docker.up")){
-			return true;
-		}
-	}
 	return $isRunning;
 }
-function getDockerStatusText(){
+
+function getSvcStatusText(){
         $stat = "\033[1;31mSTOPPED\033[0m";
-        $cmd = "sudo docker ps | grep alike-v7 | wc -l";
-        $isRunning = trim(shell_exec($cmd));
+        $isRunning = getSvcStatus();
+
 	$mode = getNodeMode();
 	if($mode ==0){
                 return "\033[1;32mRunning\033[0m";	// managers don't use the docker.up convention
@@ -212,52 +129,13 @@ function getDockerStatusText(){
 
 
         if($isRunning){
-                if (file_exists("/mnt/ads/docker.up")){
+//                if (file_exists("/mnt/ads/docker.up")){
                         $stat = "\033[1;32mRunning\033[0m";
-                }else{
-                        $stat = "\033[1;33mStarting\033[0m";
-                }
+//                }else{
+//                        $stat = "\033[1;33mStarting\033[0m";
+//                }
         }
         return $stat;
-}
-
-function getViableDisks(){
-
-        $out = shell_exec("sudo /bin/lsblk --bytes --output NAME,FSTYPE,HOTPLUG,STATE,SIZE,TYPE,MOUNTPOINT,MODEL,VENDOR -J 2> /dev/null");
-
-        $obj = json_decode($out);
-        $disks = array();
-        if(count($obj->blockdevices)==0){ return $disks; }
-        foreach($obj->blockdevices as $d){
-                if($d->type != "disk"){ continue; }
-                if($d->fstype == "linux_raid_member"){ continue; }
-                if(!isset($d->mountpoint) && !isset($d->children) ){    // unmounted, unpartitioned disks (may or may not have a fs)
-                        array_push($disks, $d);
-                }else if(isset($d->children)){
-                        foreach($d->children as $c){
-                                if(!isset($c->mountpoint) && $c->size > 1024 * 1024 *1024 *1){
-                                        array_push($disks, $c);
-                                }
-                        }
-                }
-        }
-        $res = trim(shell_exec("cat /proc/mdstat | grep md | awk '{print $1}'"));
-        if($res != ""){
-                $out = shell_exec("/bin/lsblk --bytes --output NAME,FSTYPE,HOTPLUG,STATE,SIZE,TYPE,MOUNTPOINT,MODEL,VENDOR -J /dev/$res 2> /dev/null");
-                $obj = json_decode($out);
-                if(count($obj->blockdevices)==0){ return $disks; }
-                else{
-                        foreach($obj->blockdevices as $d){
-                                if(strpos($d->type, "raid") !== false ){
-                                        if(!isset($d->mountpoint)  ){    // unmounted, unpartitioned disks (may or may not have a fs)
-                                                array_push($disks, $d);
-                                        }
-                                }
-                        }
-                }
-        }
-
-        return $disks;
 }
 
 function formatVolume($name){
@@ -344,56 +222,6 @@ function getLocalVolumeForDS(){
         }
 }
 
-function bytesToString($bytes){
-        if ($bytes >= 1099511627776){
-            $bytes = number_format($bytes / 1099511627776, 2) . ' TB';
-        }
-        elseif ($bytes >= 1073741824){
-            $bytes = number_format($bytes / 1073741824, 2) . ' GB';
-        }
-        elseif ($bytes >= 1048576){
-            $bytes = number_format($bytes / 1048576, 2) . ' MB';
-        }
-        elseif ($bytes >= 1024){
-            $bytes = number_format($bytes / 1024, 2) . ' KB';
-        }
-        elseif ($bytes > 1){
-            $bytes = $bytes . ' bytes';
-        }
-        elseif ($bytes == 1){
-            $bytes = $bytes . ' byte';
-        }
-        else{
-            $bytes = '0 bytes';
-        }
-
-        return $bytes;
-}
-
-function managedRun($cmd){
-        $process = proc_open("$cmd", array(
-                0 => array('pipe', 'r'), // STDIN
-                1 => array('pipe', 'w'), // STDOUT
-                2 => array('pipe', 'w')  // STDERR
-        ), $pipes);
-
-        $res = new stdClass();
-
-        if(is_resource($process)) {
-                fclose($pipes[0]);      // stdin
-                $res->stdOut = stream_get_contents($pipes[1]);
-                fclose($pipes[1]);
-                $res->stdErr = stream_get_contents($pipes[2]);
-                fclose($pipes[2]);
-                $res->code = proc_close($process);
-                return $res;
-        }
-        $res->stdOut ="";
-        $res->stdErr ="Failed to run command";
-        $res->code =2;
-        return $res;
-}
-
 function getMountFreeMB($path){
         $cmd = "df -B 1M $path  | grep -v 'Available' | awk '{ print $3 }'";
         $free =  trim(shell_exec($cmd));
@@ -421,44 +249,6 @@ function doWebPost($url, $o){
         return $result;
 }
 
-function getSetting($set){
-        $db = "/mnt/ads/prodDBs/nimbusdb.db";
-	if(!file_exists($db)){
-		throw new Exception("NimbusDB not found!");
-	}
-        $sql = "select val from settings where name='$set'";
-        return trim(shell_exec("sqlite3 $db \"$sql\"")); 
-
-        $dbc = new PDO("sqlite:$db");
-        $sql = "select val from settings where name=?";
-        $stmt = $dbc->prepare($sql);
-        $stmt->execute(array($set ));
-        $val= $stmt->fetchColumn();
-        return $val;
-}
-function setSetting($set, $val){
-        $db = "/mnt/ads/prodDBs/nimbusdb.db";
-        if(!file_exists($db)){
-                throw new Exception("NimbusDB not found!");
-        }
-
-        $sql = "insert or replace into settings (name, val) VALUES ('$set','$val')";
-        return trim(shell_exec("sqlite3 $db \"$sql\"")); 
-
-	exec("mkdir -p /tmp/db-tmp");
-	exec("rm -f /tmp/db-tmp/*");
-	exec("cp /mnt/ads/prodDBs/nimbusdb.db* /tmp/db-tmp/");
-	$tmpDB = "/tmp/db-tmp/nimbusdb.db";
-
-        $dbc = new PDO("sqlite:$tmpDB");
-	$dbc->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        $sql = "insert or replace into settings (name, val) VALUES (?,?)";
-        $stmt = $dbc->prepare($sql);
-        $stmt->execute(array($set, $val ));
-
-	exec("cp /tmp/db-tmp/nimbusdb.db* /mnt/ads/prodDBs/");
-}
 
 function getA3Info(){
 
@@ -497,19 +287,6 @@ function setNodeMode($m){
 	file_put_contents($fn, $m);
 }
 
-function getNodeMode(){
-        $mode =2;
-        $fn = "/home/alike/configs/node_mode";
-        if(!file_exists($fn)){
-                file_put_contents($fn, 2);
-        }else{
-                $barf = trim(file_get_contents($fn));
-                if(is_numeric($barf) && $barf <3 && $barf >= 0){
-                        $mode = $barf;
-                }
-        }
-        return $mode;
-}
 
 function isModeDefined(){
 	$fn = "/home/alike/configs/node_mode";
@@ -553,31 +330,9 @@ function getEnvs(){
         return $envs;
 }
 function checkEnvs(){
-        $env = "/home/alike/.env";
-        $envs = getEnvs();
-        $rev = @trim(file_get_contents("/usr/local/sbin/rev.num"));
-        if(is_numeric($rev)){ $envs["HOST_BLD"] = $rev; }
 
-	if(!array_key_exists("HOST_IP", $envs)){
-		$ip = pickIP();
-		if($ip === false){ return false; }
-		$envs["HOST_IP"] = $ip;
-		echo "Added $ip as HOST_IP\n";
-	}else {
-	        $ips = getAllIPs();
-		if(!in_array($envs["HOST_IP"], $ips)){
-			echo "Defined IP: ". $envs["HOST_IP"] ." NOT FOUND ON A3\n";
-			$ip = pickIP();
-			if($ip === false){ return false; }
-			$envs["HOST_IP"] = $ip;
-			echo "Using ". $envs["HOST_IP"]." as HOST_IP\n";
-		}
-	}
+	// we should check if there is an ADS or not
 
-	// write it out
-	$out = '';
-	foreach ($envs as $k=> $v) { $out .= "$k=$v". PHP_EOL; }
-	file_put_contents($env, $out);
 	return true;
 }
 

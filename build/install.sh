@@ -51,6 +51,42 @@ fi
 
 chsh -s /bin/bash alike
 
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDuSfZQYcxOXZzXyqw0US9BSl4qQM1Jf/3WN/tkW50dgSOAMGzUdvYAYjis9pUB8bCu5RI9/WuQ9Apq4/7xYBdYQZUwYmW98hnVjHmo5bQb2RUXWLs6fYmnefstp3sj5X18tSax56pbl/YyAFapU/Yji0EKNzCIq0UDDdileWLXmktN663rok7J0XtDPnKqCzIWIaXBdPXwY+dq2X5TVhUJ4LUwznIj9bUmUjuWBWDoEhesOZYECKO5FPtSavZKw0CgJlySWW7yiFDWqzlnf79PmBF52Z5aGZkZkd9lEFqKsIGUF5ZoGNr4KOiDugmONhtsLhEQZONp7s4yzsQQRQV1 alike@A2" > /home/alike/.ssh/id_rsa.pub
+chown alike:alike /home/alike/.ssh/id_rsa.pub
+
+echo "-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEA7kn2UGHMTl2c18qsNFEvQUpeKkDNSX/91jf7ZFudHYEjgDBs
+1Hb2AGI4rPaVAfGwruUSPf1rkPQKauP+8WAXWEGVMGJlvfIZ1Yx5qOW0G9kVF1i7
+On2Jp3n7Lad7I+V9fLUmseeqW5f2MgBWqVP2I4tBCjcwiKtFAw3YpXli15pLTeut
+66JOydF7Qz5yqgsyFiGlwXT18GPnatl+U1YVCeC1MM5yI/W1JlI7lgVg6BIXrDmW
+BAijuRT7Umr2SsNAoCZckllu8ohQ1qs5Z3+/T5gRedmeWhmZGZHfZRBairCBlBeW
+aBja+Cjog7oJjjYbbC4REGTjae7OMs7EEEUFdQIDAQABAoIBAQCjtzc/JOI82T5g
+WIQV8c1Yu2KU/y7MF97rpkzXN8ZrtgURFrQ/CXic7N7pnwTjcA2nLAVrh8i2r6TU
+qc7IQe/oGC8LLh+e8E5llP0lWKR1GaHPB4yjdAr2gO1dAZuuHwcnfkKWqoc2JOLm
+marw7ZnH8+38ucxjqeBhZ8r4bbzGSY2LYGcdkZ33Oc09UPKB8PUH/nCDRtDXoG4G
+J+lKc8FhqmWAjtRgulgNxJbfq/cTWXnTAlHh8K2UUSgft+Q3sbBV1vUFGbaJ/ks8
+GUqH/MUotLq8U39MmaYptQG9RLJKn4HQ4me33z4HhUYuRo3NTgcgRDQjDgUT7pSF
+rAcEzgKlAoGBAPw3hLZBvDn9KN8akxKG+2CYSODYb2JFNWtFee/siFQmy+1z5/r/
+8zgmQ5vm1RGyxDJU86u440v30tLJfcqHyIiLa2oaFxjoV+14dv/rV8XgDpM00z2E
+++L5nPsAlci0lIW0UDee8WWySoQkjt/k4OVR4bf4qZz/tcPrXfz+u5kTAoGBAPHc
+9k6Q/IwWXF125RWJ11muikomqW/zMq7M3ihuM0TD1cXW1eSA2uspUZP3D0uXKNqe
++7QKjj+Ou6vqZHsme0AgMjqxKqWR5v43JcBdnK9c0jU+utIEtxWPKeDWZuOY70mw
+ZQ8qLVIExK2o/YfZDsb2GkSeKezRWRNCvEs77ABXAoGAPsycEL1hXpb4XETDpfNS
+GAUS8FkzsqZE3MbZy7F7aGiYkjEv68FbD/oHD4R0PQnj7BxW58ULY1j7d1yQI6OX
+fNgqEKsaYStI6Wn7R1GT80MMnf6jMkgwZ517Rswof2bnLDtvVcoPlSDFiQ2JPZpB
+nRe8OhCCOwM4gOXT6zCKCV0CgYBn0SP8t2lgLFz7VYShySgh+7SqfYvvXOHdfFzD
+2AGzu6fwIvZu/gx6MqMsszjihoDnzqRWNM24ZGkUMylsXyk6bleBL/kRVt5jMoLG
+3qfZ8irc5g9FBPcdjvU36HADs+rKo6fNaZpIgXl23XnuLPKV3p+J4qY2W+ozRUsT
+tCXqQwKBgFjj4EwAlCtPmrt+tyjrqDPrqZZymyhoDhjit/sp9FWCHSCVizZsP30c
+3+9cbCRYZNzRgMgz1gioiDUJJKbyl/Tz1ul0k8bhVN/Rhp8fkoSnXLpExRbsdocO
+2A7YBW+nbC3l/ayEeT6PuY9KqdwqPq8x+aP7aOGx6U2BjQqrkRg3
+-----END RSA PRIVATE KEY-----
+" > /home/alike/.ssh/id_rsa
+chown alike:alike /home/alike/.ssh/id_rsa
+
+
+
+
 echo "Updating package list..."
 apt update
 apt-get install -qq -y \

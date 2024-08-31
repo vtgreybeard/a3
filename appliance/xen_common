@@ -617,12 +617,6 @@ function makeBlankVmXen($name, $srId=null, $templateName="Other install media"){
 	                deleteVBD($d->vbd_uuid);
         	        deleteVDI($d->vdi_uuid);
 	        }
-
-		/* for($x = 0; $x < 10; ++$x) {
-			$cmdo = "vm-disk-remove uuid=$out device=$x";
-			$newOut = trim(xen_call($cmdo));
-			//gen_log(LOG_DEBUG, $newOut);
-		}*/
 	}
 
         return $out;
@@ -683,7 +677,7 @@ function getXenTemplates($poolID, $justDefaults=false){
 
 function createVdiForVm($vmUuid, $bytes, $srUuid, $vdiName, $vdiDesc, $type="user"){
 	// for memory-disks, type = suspend
-	//echo "Creating VDI: vdi-create: virtual-siz=$bytes, vm-uuid=$vmUuid, type=$type, sr-uuid=$srUuid, name-label=$vdiName\n";
+	//echo "Creating VDI: vdi-create: virtual-size=$bytes, vm-uuid=$vmUuid, type=$type, sr-uuid=$srUuid, name-label=$vdiName\n";
         $vdi = trim(xen_call("vdi-create", "virtual-size=$bytes", "vm-uuid=$vmUuid", "type=$type", "sr-uuid=$srUuid", "name-label=\"$vdiName\"", "description=\"$vdiDesc\""));
         if(stripos($vdi, "invalid") !== false) { 
                 throw new ErrorException("Cannot create VDI.  Xen returned: $vdi");

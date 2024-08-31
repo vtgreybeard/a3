@@ -1,0 +1,11 @@
+#!/usr/bin/php -q
+<?php
+
+include_once("/usr/local/sbin/xen_common");
+
+xen_connect($argv[1]);
+$myArray = array_slice($argv, 2);
+echo xen_call(...$myArray);
+
+?>
+

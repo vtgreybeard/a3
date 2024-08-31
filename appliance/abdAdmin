@@ -83,6 +83,7 @@ try{
 		scrubOrphanABDs();
 	}
 	if($args[1] == "provision") {
+		if(!isset($args[2])){ die("No poolID given!\n"); }
 		$poolID = $args[2];
 		$flock = qflock("/tmp/abd_fl_$poolID", $abdLockTimeout);
 		try{
