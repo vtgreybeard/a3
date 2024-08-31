@@ -48,7 +48,7 @@ function cleanAlikeTemp(){
 }
 
 function checkFreeSpace(){
-	exec("sudo logrotate /etc/logrotate.d/a2.engine");
+	exec("sudo logrotate /etc/logrotate.d/a3.engine");
 
 	// check the local disk (min 500MB)
 	$use = getDiskUsageLocal();

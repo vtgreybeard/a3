@@ -67,6 +67,7 @@ systemctl start nginx
 # Now move onto the Alike software 
 cp ../configs/nginx.conf.etc /etc/nginx/nginx.conf
 cp ../configs/smb.conf /etc/samba/smb.conf
+cp ../configs/a3.logrotate /etc/logrotate.d/a3.engine
 
 PHP_VERSION=$(php -r "echo PHP_VERSION;")
 PHP_DIR="/etc/php/${PHP_VERSION%.*}/"
@@ -105,8 +106,8 @@ echo "Installing crontab"
 cp ../configs/nginx.conf /home/alike/configs/
 cp ../configs/*.pem /home/alike/certs/
 cp -r ../webui/* /home/alike/Alike/docroot/
-if [ -d "/home/alike/Alike/hooks" ]; then
-	mv -n /home/alike/Alike/hooks /home/alike/Alike/
+if [ -d "../hooks" ]; then
+	mv -n ../hooks /home/alike/Alike/
 fi
 cp ../appliance/* /usr/local/sbin/
 cp -r ../binaries/java/* /home/alike/Alike/java/

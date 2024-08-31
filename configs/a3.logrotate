@@ -1,0 +1,13 @@
+/home/alike/logs/engine.log {
+        su root syslog
+        weekly
+        missingok
+        rotate 14
+        maxsize 10485760
+        compress
+        notifempty
+        postrotate
+                kill -HUP $( cat /var/run/rsyslogd.pid )
+        endscript
+}
+

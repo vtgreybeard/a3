@@ -170,11 +170,9 @@ function getADSInfo(){
 	$ads->path = "?";
 	$ads->type = 0;
 
-        $bits = explode(" ",exec("df /mnt/ads 2>/dev/null| grep /mnt/ads | awk '{print $2, $4}'"));
-        if(count($bits) > 1){
-                $ads->total = $bits[0] * 1024;
-                $ads->free = $bits[1] * 1024;
-        }
+        $path = "/mnt/ads"; 
+        $ads->total = trim(shell_exec("df -B1 $path | awk 'NR==2 {print $2}'"));
+        $ads->free = trim(shell_exec("df -B1 $path | awk 'NR==2 {print $4}'"));
 	$ads->type = trim(shell_exec("mount  | grep ads | awk '{print $5}'"));
 
         return $ads;
@@ -766,7 +764,7 @@ function getActStored(){
 		return ($cnt * $avg);
 	}
         $raw = trim(shell_exec("/bin/df --block-size=1 /mnt/ads | grep -v ads_raw| grep /mnt/ads | expand -i -t 1 | tr -s \" \"| awk {'print $3'}"));
-        $used = round($raw );
+        $used = round(floatval($raw) );
         return $used;
 }
 
@@ -811,7 +809,7 @@ function updateADSStatus(){
 				$res->message = $err["message"];
 			}
 		}
-		if(amRoot()){ exec("chown alike.alike $tst"); }
+		if(amRoot()){ exec("chown alike:alike $tst"); }
 	}
 	$out = json_encode($res);
 	file_put_contents($tst, $out);
@@ -854,7 +852,7 @@ function updateODSStatus(){
                 exec("echo 0 > $tst");
                 $res = false ;
         }
-	if(amRoot()){ exec("chown alike.alike $tst"); }
+	if(amRoot()){ exec("chown alike:alike $tst"); }
 	return $res;
 }
 
@@ -2428,7 +2426,7 @@ function checkOrphanSrs(){
 
 function updateMungeConf($ip){
 	$mc  = "/home/alike/Alike/agentShare/munge.conf";
-	exec("sudo chown alike.alike $mc");
+	exec("sudo chown alike:alike $mc");
 	$old = trim(file_get_contents($mc));
 	$parts = explode(",", $old);
 	$parts[0] = $ip;
@@ -2584,8 +2582,11 @@ function slurpDmesg(){
         setSetting("lastDmesg", time());
 }
 function slurpEngineLog(){
+	$log = "/home/alike/logs/engine.log";
+	if(!file_exists($log)){ return; }
+
         $last  =getSetting("lastEngineLog");
-        exec("cat /home/alike/logs/engine.log | grep '^3'", $output);
+        exec("cat $log | grep '^3'", $output);
         foreach ($output as $line) {
                 $line = substr($line, 2);
                 if (preg_match('/^([A-Za-z]+\s+\d+\s+\d+:\d+:\d+)(.*)/', $line, $matches)) {

@@ -1087,7 +1087,7 @@ function copyVhdIfNeeded($vhdUuid, $srId){
 		echo "Copying ABD image to NFS SR\n";
 		exec("7za e $abdFile -o$vhdPath/");
 		exec("mv $vhdPath/0.vhd $full");
-		exec("chown nobody.nogroup $full");
+		exec("chown nobody:nogroup $full");
 		exec("chmod 664 $full");
 		echo "Requesting Xen SR Scan of NFS SR\n";
 		$rez = xen_call("sr-scan uuid=$srId");

@@ -36,7 +36,7 @@ if(isset($_REQUEST['login'])){
 	include_once('/usr/local/sbin/manager_lib');
 	$user = $_REQUEST['username'];
 	$pass = $_REQUEST['password'];
-	$res = checkAuth($user, $pass);
+	$res = checkAuthOld($user, $pass);
 	if($res->result == "success"){
 		$_SESSION["session_token"] = $res->session;
 		$_SESSION["email"] = $user;

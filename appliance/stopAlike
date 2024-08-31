@@ -67,7 +67,7 @@ function stopJava(){
 		$result = $filebase . ".result";
 		$max = 0;
 		file_put_contents($killfile, $content);
-		shell_exec("chown alike.alike $killfile");
+		shell_exec("chown alike:alike $killfile");
 		while(file_exists($result) == false) {
 			sleep(1);
 			if($max++ > 300) {

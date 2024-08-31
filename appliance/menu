@@ -689,7 +689,7 @@ function initDS($type){
 	echo "Complete.\n";
 	echo "Creating a new $type\n";
 	if($type=="ads"){
-		exec("sudo chown -R alike.alike /mnt/ads");
+		exec("sudo chown -R alike:alike /mnt/ads");
 		$bs = "blockSize=2048";
 		echo "BlockSize: 2MB  Change? (y/N): ";
 		$resp = getYN(true);
@@ -724,7 +724,7 @@ function initDS($type){
 		echo "\nPress any key to continue";
 		fgets(STDIN);
 	}else{
-		exec("sudo chown -R alike.alike /mnt/ods");
+		exec("sudo chown -R alike:alike /mnt/ods");
 		echo shell_exec("sudo docker run -v /mnt/ods:/ods quadricsoftware/a3-tool ods");
 	}
 }

@@ -989,7 +989,7 @@ function syncVms($a3){
         syncVMsForA3($a3, $vms);
 }
 
-function checkAuthOld($a){
+function checkAuthOld($user, $pass){
 	$r = new stdClass();
 
 	$ourUser = getSettingMgr("uiUser");	
@@ -1004,7 +1004,7 @@ function checkAuthOld($a){
 		setSettingMgr("uiPass", $ourPass);
 	}
 
-	if($a->user == $ourUser && $a->pass == $ourPass){
+	if($user == $ourUser && $pass == $ourPass){
 		$r->result = "success";
 		$r->message = "Local authentication successful";
 		$r->session = session_id();
@@ -1020,7 +1020,7 @@ function checkAuthOld($a){
 
 }
 function checkAuth($user, $pass){
-	;
+	return checkAuthOld($user, $pass);
 }
 
 function clearProxy(){
