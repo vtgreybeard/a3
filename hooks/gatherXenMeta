@@ -115,7 +115,7 @@ function updateFromHost($h, $isInitial=false){
 			if($h->uuid == $pool->master){ $h->role =1; }
 			if(!haveHostbyIP($h->ip)){
 				$sql = "INSERT into Host (hostName, virtType, username, password, port, key, poolID, uuid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-				dbSet("nimbus", $sql, array($h->ip, $orig->type, $orig->username, obfuscate($orig->password), "443", "licensed", $orig->poolID, $h->uuid ));
+				dbSet("nimbus", $sql, array($h->ip, $orig->type, $orig->username, $orig->password, "443", "licensed", $orig->poolID, $h->uuid ));
 
 			}
 			$test = getHost($h->ip);
@@ -352,7 +352,7 @@ function updateHostDB($h){
 			syslog(LOG_NOTICE,"$msg");
 			echo "$msg\n";
 			$q =  "INSERT INTO host (hostname,virtType,username,password, role,key, port, deleteFlag, uuid,poolID,lastUsed) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
-			dbSet("nimbus", $q, array($h->ip,"2",$other->username,obfuscate($other->password),$h->role,"$lic",443,NULL,$h->uuid,$h->poolID,time() ) );
+			dbSet("nimbus", $q, array($h->ip,"2",$other->username,$other->password,$h->role,"$lic",443,NULL,$h->uuid,$h->poolID,time() ) );
 		}
 
 		// tm_vhost:	id|uuid|name|poolid|nativeName|numcpu|totalMemory|freeMemory|osName

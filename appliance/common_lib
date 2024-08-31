@@ -87,12 +87,12 @@ function getSetting($set){
 	$st = dbGetColumn("nimbus", $sql, array($set) );
         if(!isset($st) ){ return ""; }
 
-	if($set == "smtpPassword"){ $st = unobfuscate($st); }
+	if($set == "smtpPassword"){ $st = $st; }
 
         return $st;
 }
 function setSetting($name, $val){
-	if($name == "smtpPassword"){ $val = obfuscate($val); }
+	if($name == "smtpPassword"){ $val = $val; }
         $sql = "INSERT OR REPLACE INTO Settings (name,val) VALUES (?, ?)";
         dbSet("nimbus", $sql, array($name, $val));
 }
@@ -170,9 +170,10 @@ function getADSInfo(){
 	$ads->path = "?";
 	$ads->type = 0;
 
-        $path = "/mnt/ads"; 
-        $ads->total = trim(shell_exec("df -B1 $path | awk 'NR==2 {print $2}'"));
-        $ads->free = trim(shell_exec("df -B1 $path | awk 'NR==2 {print $4}'"));
+	$path = "/mnt/ads";
+	$ads->total = trim(shell_exec("df -B1 $path | awk 'NR==2 {print $2}'"));
+	$ads->free = trim(shell_exec("df -B1 $path | awk 'NR==2 {print $4}'"));
+
 	$ads->type = trim(shell_exec("mount  | grep ads | awk '{print $5}'"));
 
         return $ads;
@@ -748,7 +749,7 @@ function getADSDedup(){
 	return round(abs( (($cnt / $ref) * 100)-100)) ;
 }
 function getADSFree(){
-        $raw = trim(shell_exec("/bin/df --block-size=1 /mnt/ads | grep -v ads_raw| grep /mnt/ads | expand -i -t 1 | tr -s \" \"| awk {'print $4'}"));
+        $raw = trim(shell_exec("/bin/df --block-size=1 /mnt/ads | grep -v Filesystem | expand -i -t 1 | tr -s \" \"| awk {'print $4'}"));
         return round(floatval($raw ) );
 }
 function getActStored(){
@@ -764,7 +765,7 @@ function getActStored(){
 		return ($cnt * $avg);
 	}
         $raw = trim(shell_exec("/bin/df --block-size=1 /mnt/ads | grep -v ads_raw| grep /mnt/ads | expand -i -t 1 | tr -s \" \"| awk {'print $3'}"));
-        $used = round(floatval($raw) );
+        $used = round($raw );
         return $used;
 }
 
@@ -1173,21 +1174,6 @@ function managedRun($cmd){
 
 }
 
-function obfuscate($str){
-	;
-}
-
-function unobfuscate($str){
-	;
-}
-
-function obfuscateLocal($str){
-	;
-}
-
-function unobfuscateLocal($str){
-	;
-}
 
 function jumbler($text, $key) {
         ;
@@ -2582,8 +2568,8 @@ function slurpDmesg(){
         setSetting("lastDmesg", time());
 }
 function slurpEngineLog(){
-	$log = "/home/alike/logs/engine.log";
-	if(!file_exists($log)){ return; }
+       $log = "/home/alike/logs/engine.log";
+        if(!file_exists($log)){ return; }
 
         $last  =getSetting("lastEngineLog");
         exec("cat $log | grep '^3'", $output);

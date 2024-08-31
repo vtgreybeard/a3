@@ -50,7 +50,7 @@ function xen_call($cmd, ...$args) {
 	if(getenv("XE_EXTRA_ARGS") == false) {
 		throw new ErrorException("authToXen not yet called!");
 	}
-	$cmd1 = $GLOBALS["xe_cmd"] ." $cmd ".implode($args, ' ')." 2>&1";
+	$cmd1 = $GLOBALS["xe_cmd"] ." $cmd ".implode(' ', $args)." 2>&1";
 	//echo "CMD is $cmd1\n";
 	$returnMe = shell_exec($cmd1);
 	foreach($GLOBALS["xe_bad"] as $bad) {

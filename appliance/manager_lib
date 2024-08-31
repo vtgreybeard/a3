@@ -172,10 +172,12 @@ function delHostNimbus($guid, $a3id){
 	return $res;
 }
 function addHostNimbus($h){
+        $a3 = getLocalA3();
 
-	doAddHost($h);
-	$sql = "INSERT or REPLACE into a3_host VALUES(?,?)";
-        return dbset("manager", $sql, array($a3id, $h->id));
+        doAddHost($h);
+        $sql = "INSERT or REPLACE into a3_host VALUES(?,?)";
+        return dbset("manager", $sql, array($a3->id, $h->id));
+
 }
 function editHostNimbus($h, $a3id){
 	editHost($h);
@@ -1012,7 +1014,7 @@ function checkAuthOld($user, $pass){
 
 	}else{
 		$r->result = "error";
-		$r->message = "Local authentication failed!";
+		$r->message = "Local authentication failed! ";
 		$r->session = "";
 
 	}
