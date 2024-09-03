@@ -5,6 +5,7 @@ if [ "$1" = "-s" ]; then
     silent=true
 fi
 set -e
+cd "$(dirname "$0")"
 
 check_os() {
     if [[ -f /etc/os-release ]]; then
@@ -50,7 +51,7 @@ fi
 fi
 
 chsh -s /bin/bash alike
-
+mkdir -p /home/alike/.ssh
 echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDuSfZQYcxOXZzXyqw0US9BSl4qQM1Jf/3WN/tkW50dgSOAMGzUdvYAYjis9pUB8bCu5RI9/WuQ9Apq4/7xYBdYQZUwYmW98hnVjHmo5bQb2RUXWLs6fYmnefstp3sj5X18tSax56pbl/YyAFapU/Yji0EKNzCIq0UDDdileWLXmktN663rok7J0XtDPnKqCzIWIaXBdPXwY+dq2X5TVhUJ4LUwznIj9bUmUjuWBWDoEhesOZYECKO5FPtSavZKw0CgJlySWW7yiFDWqzlnf79PmBF52Z5aGZkZkd9lEFqKsIGUF5ZoGNr4KOiDugmONhtsLhEQZONp7s4yzsQQRQV1 alike@A2" > /home/alike/.ssh/id_rsa.pub
 chown alike:alike /home/alike/.ssh/id_rsa.pub
 
@@ -176,7 +177,7 @@ cp -r ../binaries/blkfs /usr/local/sbin/
 echo "3.85" > /home/alike/a3.rev
 
 chown -R alike:alike /home/alike
-chmod 755 /usr/local/sbin/appliance/*
+chmod 755 /usr/local/sbin/*
 chmod 755 /home/alike/Alike/hooks/*
 
 #echo "Upgrading installed packages..."
