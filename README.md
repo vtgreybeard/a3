@@ -9,8 +9,9 @@ This project's goal is to eliminate the Docker layer, and move the Alike softwar
 
 
 # Current Build Process #
-At present, this project has only been tested on Debian 12.5, but it will likely work on other (modern) Debian based systems.
-1. To make the new A3, you can use the Debian "preseed" process, by using the following URL as the script during an automated install.  Please be sure the sytem has at least 32GB of disk, and 1-2GB ram minimum.
+At present, this project has only been tested on Debian 12.5, but it will likely work on other (modern) Debian based systems. To create the new A3, you can use the Debian "preseed" process, by using the following URL as the script during an automated install. This will provide the base OS and all required packages for Alike to run.  After the installation completes, you will then be prompted to run a single command which will pull the latest build of the Alike software, and install it locally.
+##Steps##
+1. Boot your system with a Debian 12.x ISO.  Please be sure the sytem has at least 32GB of disk, and 1-2GB ram minimum.
 http://tbd.com/a3.cfg
 1. Once the base OS install is complete, login as root with the user "alike"  (Please change ASAP)
 1. Then follow the steps presented on screen, which at present are:
