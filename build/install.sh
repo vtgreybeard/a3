@@ -88,18 +88,19 @@ chown alike:alike /home/alike/.ssh/id_rsa
 
 
 
-echo "Updating package list..."
-apt update
-apt-get install -qq -y \
-libc6 cron dos2unix rsyslog python3 samba samba-common samba-common-bin samba-dsdb-modules samba-libs samba-vfs-modules \
-openresolv screen shared-mime-info snmpd sqlite3 msmtp inetutils-ping stunnel sudo traceroute util-linux-locales wget \
-xz-utils pv p7zip p7zip-full \
-parted openssh-client openssh-server openssh-sftp-server openssl net-tools wireguard gdisk bindfs \
-nfs-kernel-server nginx lsb-release lsof lz4 kpartx logrotate mono-complete \
-fuse dos2unix curl apt apt-listchanges apt-utils util-linux-locales util-linux vim gawk php php-fpm php-cli php-cgi php-sqlite3 php-curl php-mbstring --no-install-recommends;
-systemctl enable nginx
-systemctl start nginx
-
+if [ "$silent" = false ]; then
+	echo "Updating package list..."
+	apt update
+	apt-get install -qq -y \
+	libc6 cron dos2unix rsyslog python3 samba samba-common samba-common-bin samba-dsdb-modules samba-libs samba-vfs-modules \
+	openresolv screen shared-mime-info snmpd sqlite3 msmtp inetutils-ping stunnel sudo traceroute util-linux-locales wget \
+	xz-utils pv p7zip p7zip-full \
+	parted openssh-client openssh-server openssh-sftp-server openssl net-tools wireguard gdisk bindfs \
+	nfs-kernel-server nginx lsb-release lsof lz4 kpartx logrotate mono-complete \
+	fuse dos2unix curl apt apt-listchanges apt-utils util-linux-locales util-linux vim gawk php php-fpm php-cli php-cgi php-sqlite3 php-curl php-mbstring --no-install-recommends;
+	systemctl enable nginx
+	systemctl start nginx
+fi
 
 # Now move onto the Alike software 
 cp ../configs/nginx.conf.etc /etc/nginx/nginx.conf
@@ -186,4 +187,4 @@ chmod 755 /home/alike/Alike/hooks/*
 echo "Setup completed successfully!"
 
 echo "Welcome to the A3" > /etc/issue
-
+menu
