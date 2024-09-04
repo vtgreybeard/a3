@@ -206,6 +206,7 @@ fi
 cp ../appliance/* /usr/local/sbin/
 cp ../binaries/*.dll /usr/local/sbin/
 mv ../binaries/BackupScheduler.exe /home/alike/Alike/
+wine /home/alike/Alike/BackupScheduler.exe -b 2>/dev/null
 cp ../binaries/*.exe /usr/local/sbin/
 cp -r ../binaries/java/* /home/alike/Alike/java/
 cp ../binaries/abd.dat.7z /home/alike/Alike/ext/
