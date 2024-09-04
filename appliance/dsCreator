@@ -79,6 +79,11 @@ function makeDS($type, $bsize){
 		exec("sqlite3 $dsBase/prodDBs/nimbusdb.db \"insert into settings(name,val) VALUES ('blockSize', '$bs')\" ");
 		exec("sqlite3 $dsBase/prodDBs/nimbusdb.db \"insert into settings(name,val) VALUES ('uiUser', 'alike')\" ");
 		exec("sqlite3 $dsBase/prodDBs/nimbusdb.db \"insert into settings(name,val) VALUES ('uiPass', 'alike')\" ");
+		if(file_exists("/mnt/ads/nods")){
+			unlink("/mnt/ads/nods");
+		}
+
+		loadADS();
 	}
 	exec("chown -R 1000:1000 $dsBase");
 }

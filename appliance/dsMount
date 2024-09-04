@@ -48,28 +48,7 @@ if ($type == "ads"){
 	exec("rm -f /mnt/ads/prodDBs/*.db-wal");
 	exec("rm -f /mnt/ads/prodDBs/*.db-shm");
 
-	exec("cp -f /mnt/ads/prodDBs/* /home/alike/Alike/DBs/");
-	exec("chown -R alike:alike /home/alike/Alike/DBs");
-	exec("ln -sf /mnt/ads/cbtTemp /home/alike/Alike/cbtTemp");
-	
-	// do manager thing if needed
-	echo "Importing settings to manager.db\n";
-	$cmd = "su - alike -c '/usr/local/sbin/managerAdmin import'";
-	exec($cmd);
-	exec("chown alike:alike /home/alike/Alike/DBs/manager.db");
-
-	// now that we have an ADS, customize local settings from our DBs
-        $hostIP = getSetting("hostIP");
-        if(empty($hostIP)){
-                $hostIP = trim(shell_exec("hostname -I"));
-                setSetting("hostIP", $hostIP);
-        }
-        $id = setInstallID();
-        echo "Alike InstallID: $id\n";
-        // set smb passwords
-        updateLocalUsers();
-        $cnf = makeMungeConf();
-        echo "Backup Data transfer port bound to: $cnf\n";
+	loadADS();
 
 	exit(0);
 

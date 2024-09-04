@@ -55,51 +55,13 @@ function checkEnv($vm){
 		throw new Exception("ADS is not mounted, or in an inconsistent state.  Replications can't run until this is resolved. (jads.status is missing)");
 	}
 
-	$res = licenseCheck(null, null, null, "replicate");
-	// licensing problem
-	if($res->status == "error"){ throw new Exception("Licensing error: $res->message"); }	// no plan
-	if($res->status == "denied"){ throw new Exception("Licensing error- $res->message."); }	// no DR
-
 	if($vm->virtTech == 10){
 		// agents
-		$res = licenseCheck($vm->guid, null, null, null);
-		if($res->status == "error"){ throw new Exception("Licensing error: $res->message"); }	// no plan
-		if($res->status == "denied"){ throw new Exception("Licensing error- $res->message."); }	// no DR
-		if($res->status == "allowed"){
-			gen_log(LOG_DEBUG, "License check success- Agent is fully licened. $res->message");
-			return;
-		}
 	}else if($vm->virtTech == 2){
-		$res = licenseCheck(null, null, $vm->poolID, "backup");
-                if($res->status == "error"){ throw new Exception("Licensing error: $res->message"); }
-                if($res->status == "allowed"){
-                        gen_log(LOG_DEBUG, "License check success- The whole Xen pool is licensed.");
-                        return;
-                }
 		connectXapiByPool($vm->poolID);
-		gen_log(LOG_DEBUG, "Connected to Xen $vm->poolID");
-		// not all hosts in pool are licensed.  see if they're running on a licensed host
-		$homer = getHomeHostXen($vm->uuid );
-		if($homer == null){
-			// vm isn't homed or running, check if pool is fully licensed
-			throw new Exception("Licensing error- VM is not running/homed on a licensed host.");
-		}
-		$h = getHostByUuid($homer);
-		$res = licenseCheck(null, $h->uuid, null, "backup");
-		if($res->status == "allowed"){
-			gen_log(LOG_DEBUG, "License check success- VM is running/homed on licensed Xen host: $h->nativeName.");
-			return;
-		}
 	}else if($vm->virtTech == 3){
 		$h = getHost($vm->hostID);
-		$res = licenseCheck(null, $h->uuid, null, "backup");
-		if($res->status == "allowed"){
-			gen_log(LOG_DEBUG, "License check success- VM is running on licensed HV host: $h->nativeName.");
-			return;
-		}
-
 	}
-	throw new Exception("Licensing error- VM is on an unlicened host.  Please license $h->nativeName or migrate this system to proceed.");
 }
 
 function doReplicate($vmId, $jobId, $ts=0){

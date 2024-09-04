@@ -1,0 +1,4 @@
+#!/bin/bash
+
+export MONO_PATH=/home/alike/Alike
+/usr/bin/mono /usr/local/sbin/converterlega.exe $@

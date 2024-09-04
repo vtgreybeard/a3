@@ -26,13 +26,14 @@ function usage(){
 
 # Pre is run before startEngine but AFTER ADS is mounted (we use nimbusdb alot)
 if($mode == "pre"){
+	$id = setInstallID();
+	echo "Alike InstallID: $id\n";
+
 	$hostIP = getSetting("hostIP");
 	if(empty($hostIP)){
 		$hostIP = trim(shell_exec("hostname -I"));
 		setSetting("hostIP", $hostIP);
 	}
-	$id = setInstallID();
-	echo "Alike InstallID: $id\n";
 	// set smb passwords
 	updateLocalUsers();
 	$cnf = makeMungeConf();
@@ -71,14 +72,14 @@ if($mode == "post"){
 }
 
 function setInstallID(){
-        $id = getSetting("installID");
-        if(empty($id)){
-		syslog(LOG_WARNING, "Failed to find installID in nimbusDB!");
-		return;
-        }
-        file_put_contents("/home/alike/Alike/inst.id",$id);
-        file_put_contents("/mnt/ads/guid.id",$id);
-        return $id;
+	$idf = "/home/alike/Alike/inst.id";
+	if(!file_exists($idf)){
+		$id = makeGuid();
+		file_put_contents($idf,$id);
+		file_put_contents("/mnt/ads/guid.id",$id);
+		setSetting("installID", $id);
+	}
+	return getSetting("installID");
 }
 
 
@@ -139,15 +140,6 @@ function makeInstaConfigs(){
 	}
 }
 
-function makeMungeConf(){
-	$ip = getSetting("hostIP");
-	$port = getSetting("mungePort");
-        if(empty($port) || $port ==""){ $port = "2811"; }
-        $key = strtoupper(md5(mt_rand(1,1000000)) );
-        $cont = "$ip,$port,$key";
-        file_put_contents("/home/alike/Alike/agentShare/munge.conf",$cont);
-        return "$ip:$port";
-}
 
 
 function updateLocalUsers(){

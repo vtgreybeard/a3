@@ -33,7 +33,6 @@ while true; do
 	esac
 done
 
-
 USER="alike"
 PASS="alike"
 ID=1000
@@ -49,6 +48,23 @@ else
 	echo "User $USER already exists."
 fi
 fi
+
+if [[ -d "/home/alike/Alike" ]]; then
+        echo
+        echo "Detected existing Alike installation!"
+        echo "Do not reinstall on top of an existing install."
+        echo "For upgrades, please use upgrade.sh"
+        echo
+        exit 1
+fi
+if [[ -f "/mnt/ads/ads.dat" ]]; then
+        echo
+        echo "Detected existing ADS (/mnt/ads)"
+        echo "Please unmount ADS before running this script!"
+        echo
+        exit 1
+fi
+
 
 chsh -s /bin/bash alike
 mkdir -p /home/alike/.ssh
@@ -84,6 +100,7 @@ tCXqQwKBgFjj4EwAlCtPmrt+tyjrqDPrqZZymyhoDhjit/sp9FWCHSCVizZsP30c
 -----END RSA PRIVATE KEY-----
 " > /home/alike/.ssh/id_rsa
 chown alike:alike /home/alike/.ssh/id_rsa
+chmod 600 /home/alike/.ssh/id_rsa
 
 
 
@@ -144,7 +161,9 @@ fi
 
 openssl req -x509 -newkey rsa:4096 -keyout /home/alike/certs/privkey.pem -out /home/alike/certs/fullchain.pem -sha256 -days 36500 -nodes -subj "/ST=region/L=City/O=Alike Backup/OU=IT/CN=a3.local"
 
-useradd -M -s /sbin/nologin ads
+if ! id ads; then
+	useradd -M -s /sbin/nologin ads
+fi
 echo -e "ads\nads" | smbpasswd -s -a ads
 systemctl enable smbd.service
 systemctl enable nfs-kernel-server
@@ -166,13 +185,17 @@ ExecStart=/usr/local/sbin/a3.startup
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl enable a3.service
+if ! systemctl is-enabled "a3.service" &>/dev/null; then
+	systemctl enable a3.service
+fi
 
 dpkg -i ../binaries/xapi-xe_1.249.3-2_amd64.deb
 
-echo "Installing crontab"
-/usr/bin/crontab -u alike ../appliance/alike_crontab;
-rm ../appliance/alike_crontab;
+if [[ -f "../appliance/alike_crontab" ]]; then
+	echo "Installing crontab"
+	/usr/bin/crontab -u alike ../appliance/alike_crontab;
+	rm ../appliance/alike_crontab;
+fi
 
 cp ../configs/nginx.conf /home/alike/configs/
 cp ../configs/*.pem /home/alike/certs/
@@ -181,6 +204,8 @@ if [ -d "../hooks" ]; then
 	mv -n ../hooks /home/alike/Alike/
 fi
 cp ../appliance/* /usr/local/sbin/
+cp ../binaries/*.dll /usr/local/sbin/
+cp ../binaries/*.exe /usr/local/sbin/
 cp -r ../binaries/java/* /home/alike/Alike/java/
 cp ../binaries/abd.dat.7z /home/alike/Alike/ext/
 cp -r ../binaries/blkfs /usr/local/sbin/
@@ -191,12 +216,7 @@ chown -R alike:alike /home/alike
 chmod 755 /usr/local/sbin/*
 chmod 755 /home/alike/Alike/hooks/*
 
-#echo "Upgrading installed packages..."
-#apt upgrade -y
-
 echo "Setup completed successfully!"
-
 echo "Welcome to the A3" > /etc/issue
-
 echo "Restarting to complete installation."
 reboot

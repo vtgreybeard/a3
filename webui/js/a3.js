@@ -16,10 +16,9 @@ function showWelcomeModal(){
 		<br>
 		<br>As an overview:<br>
 		<ul>
-		<li>Assign your A3 in the Portal (Guid is on the Dash-->)</li>
 		<li>Add any Hypervisor hosts you want to protect </li>
 		<li>If you have technical questions, check the Support Page on the left, or contact support</li>
-		<li>Please reach out to <a href='mailto:info@alikebackup.com'>info@alikebackup.com</a> if you have feedback or suggestions. </li>
+		<li>Please check out our <a href='https://github.com/alikebackup/a3'>Github Page</a> if you have questions. </li>
 		</ul>
 		<center>We hope you enjoy Alike!</center>
 		`;
@@ -336,7 +335,7 @@ function drawA3Details(data, a3id) {
 		<td> Services </span> </td>
 		<td> <span class='badge ${javaStat}'> Engine </span> </td>
 		<td> <span class='badge ${blkfsStat}'>  RestoreFS </span> </td>
-		<td> <span class='badge ${instafsStat}'> AlikeSR </span> </td>
+		<td> <span class='badge badge-secondary'> AlikeSR </span> </td>
 		</tr>`;
 
 	// engine status

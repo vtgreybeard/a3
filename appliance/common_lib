@@ -765,7 +765,7 @@ function getActStored(){
 		return ($cnt * $avg);
 	}
         $raw = trim(shell_exec("/bin/df --block-size=1 /mnt/ads | grep -v ads_raw| grep /mnt/ads | expand -i -t 1 | tr -s \" \"| awk {'print $3'}"));
-        $used = round($raw );
+        $used = round(intval($raw ));
         return $used;
 }
 

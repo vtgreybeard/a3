@@ -157,7 +157,7 @@ function doDiag($a){
 		connectXapiByPool($a->poolID);
 		$state = getVmPowerStateXen($a->uuid);
 		if($state  != "running"){
-			gen_log(LOG_INFO, "ABD $a->ID is not running.  Powering on now");
+			gen_log(LOG_INFO, "ABD $a->ID is not running ($state).  Powering on now");
 			startVmXen($a->uuid);
 		}
 		validateABD($a);

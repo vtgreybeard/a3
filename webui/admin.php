@@ -98,7 +98,7 @@ function showNoADS(){
                 <form method='post'>
                 <div class='row'>
                 <br>
-		Please configure your ADS (storage) on the A3 console
+		<center>Please configure your ADS (storage) on the A3 console</center>
                 </div>
                 <br>
                 <?php echo $msg; ?>

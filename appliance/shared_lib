@@ -3542,4 +3542,39 @@ function deleteAgent($guid){
 	dbSet("nimbus", $sql, array($guid));
 }
 
+function loadADS(){
+        exec("cp -f /mnt/ads/prodDBs/* /home/alike/Alike/DBs/");
+        exec("chown -R alike:alike /home/alike/Alike/DBs");
+        exec("ln -sf /mnt/ads/cbtTemp /home/alike/Alike/cbtTemp");
+
+	$who = trim(shell_exec("whoami"));
+	if($who != "root"){
+		throw new Exception("Must be run by root!");
+	}
+        echo "Importing settings to manager.db\n";
+        $cmd = "su - alike -c '/usr/local/sbin/managerAdmin import'";
+        exec($cmd);
+        exec("chown alike:alike /home/alike/Alike/DBs/manager.db");
+
+        // now that we have an ADS, customize local settings from our DBs
+        $hostIP = getSetting("hostIP");
+        if(empty($hostIP)){
+                $hostIP = trim(shell_exec("hostname -I"));
+                setSetting("hostIP", $hostIP);
+        }
+        $cnf = makeMungeConf();
+        echo "Backup Data transfer port bound to: $cnf\n";
+}
+
+function makeMungeConf(){
+        $ip = getSetting("hostIP");
+        $port = getSetting("mungePort");
+        if(empty($port) || $port ==""){ $port = "2811"; }
+        $key = strtoupper(md5(mt_rand(1,1000000)) );
+        $cont = "$ip,$port,$key";
+        file_put_contents("/home/alike/Alike/agentShare/munge.conf",$cont);
+        return "$ip:$port";
+}
+
+
 ?>

@@ -35,7 +35,7 @@ $(document).on('click', '.kb_metarefresh', function(){ window.open("https://docs
 $(document).on('click', '.qs_preview_link', function(){ window.open("https://docs.alikebackup.com/kb-v3/guides/a3-75-quick-start-guide/", "_blank"); });
 $(document).on('click', '.qs_portal_link', function(){ window.open("https://portal.alikebackup.com", "_blank"); });
 $(document).on('click', '.qs_kb_link', function(){ window.open("https://docs.alikebackup.com/kb-v3/", "_blank"); });
-$(document).on('click', '.qs_admin_guide_link', function(){ window.open("https://docs.alikebackup.com/admin/7/", "_blank"); });
+$(document).on('click', '.qs_admin_guide_link', function(){ window.open("https://docs.alikebackup.com/admin/7.5/", "_blank"); });
 $(document).on('click', '.qs_support_link', function(){ window.open("https://portal.alikebackup.com/?page=support", "_blank"); });
 
 function modalScroll(){

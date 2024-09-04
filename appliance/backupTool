@@ -74,57 +74,17 @@ function checkEnv($vm){
 			gen_log(LOG_DEBUG, $hoster);
 		}
 
-		// licensing problem
-		if($res->status == "error"){ throw new Exception("Licensing error: $res->message"); }
-
-		if($res->status == "allowed"){
-			gen_log(LOG_DEBUG, "License check success- The whole Xen pool is licensed.");
-			return;
-		}
-
-		// not all hosts in pool are licensed.  see if they're running on a licensed host
-		$homer = getHomeHostXen($vm->uuid );
-		if($homer == null){
-			// vm isn't homed or running, check if pool is fully licensed
-			throw new Exception("Licensing error- VM is not running/homed on a licensed host.");
-		}
-		$h = getHostByUuid($homer);
-		$res = licenseCheck(null, $h->uuid, null, "backup");
-		if($res->status == "allowed"){
-			gen_log(LOG_DEBUG, "License check success- VM is running/homed on licened host: $h->nativeName.");
-			return; 
-		}
-		throw new Exception("Licensing error- VM is on an unlicened host.  Please license $h->nativeName or migrate this system to proceed.");
-	
 	} else if($vm->type ==10){ 				// Physical
 
-		$res = licenseCheck($vm->uuid, null, null, "backup");
-
-		// licensing problem
-		if($res->status == "error"){ throw new Exception("Licensing error: $res->message"); }
-
-		if($res->status != "allowed"){
-			throw new Exception("Agent is not licensed!  Please license this system to proceed.");
-		}
 		$ip = $vm->accessIP;
 		gen_log(LOG_DEBUG, "Connecting to QS Agent $ip");
 		$st = agentStatus($ip);	// check our HV host
 		if(empty($st) || !is_object($st)){
 			throw new Exception("Failed to connect to remote system agent! ($ip)");
 		}
-
 		recordAgent($vm->VMID, $st);
 	} else{ 						// HV
 		$h = getHost($vm->hostID);
-		$res = licenseCheck(null, $h->uuid, null, "backup");
-print_r($res);
-		// licensing problem
-		if($res->status == "error"){ throw new Exception("Licensing error: $res->message"); }
-
-		if($res->status != "allowed"){
-			throw new Exception("Licensing error for host: $h->nativeName. ". $res->message);
-		}
-		gen_log(LOG_DEBUG, "License check success- VM was found on licened host: $h->nativeName.");
 		$hostIP = $h->name;
 		gen_log(LOG_DEBUG, "Connected to Hyper-v host agent $hostIP ");
 		$st = agentStatus($hostIP);	// check our HV host
