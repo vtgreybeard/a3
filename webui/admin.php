@@ -18,6 +18,12 @@ if(file_exists($nm)){
 //$bld = rand(0, 20000);
 
 
+include_once('/usr/local/sbin/common_lib');
+if(!isADSMounted()){
+	showNoADS();
+	exit();
+}
+
 session_start();
 $force_logout = false;
 $dbFile= "/home/alike/Alike/DBs/manager.db";
@@ -74,6 +80,34 @@ function printBgScript(){
 <?php
 }
 
+function showNoADS(){
+?>
+<html>
+<head>
+<link rel="stylesheet" href="/css/a3.css">  
+<link rel="stylesheet" href="/dist/css/bootstrap.min.css"> 
+ <link rel="stylesheet" href="/plugins/fontawesome.all.min.css"> 
+<?php echo printBgScript(); ?>
+    <title>A3 Manager Login</title>
+  </head>
+  <body >
+        <div style="width: 500px;  padding: 25px; border-radius: 8px; background: #f2f2f2; position: absolute; top: 30%; left: 50%; transform: translate(-50%, -30%);">
+        <div style="text-align: center;">
+                <img style="position:relative; top: -6px;" src="/images/alike-logo.png" > A3<h2>No ADS Mounted!</h2>
+                <p style="font-size: 20px;">
+                <form method='post'>
+                <div class='row'>
+                <br>
+		Please configure your ADS (storage) on the A3 console
+                </div>
+                <br>
+                <?php echo $msg; ?>
+                </p>
+            </div>
+    </div>
+<?php
+}
+
 function showLogin($msg=""){
 ?>
 <html>
@@ -120,7 +154,6 @@ function showLogin($msg=""){
             color: gray; 
         } 
 </style>
-
 <?php echo printBgScript(); ?>
     <title>A3 Manager Login</title>
   </head>

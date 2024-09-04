@@ -46,8 +46,6 @@ echo "Alike Service Startup complete.\n";
 echo "Listening for events.\n";
 echo "Starting job schedules\n";
 exec("echo 1 > /tmp/sched_svc_status");
-echo "Enabling web UI\n";
-exec("cp -f /home/alike/Alike/docroot/redirect.html /home/alike/Alike/docroot/index.html");
 
 echo "A3 Node startup complete.\n";
 
