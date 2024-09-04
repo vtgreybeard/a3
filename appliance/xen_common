@@ -61,7 +61,7 @@ function xen_call($cmd, ...$args) {
 				//echo "Redirected to Master: |$ip|\n";
 				$GLOBALS["host"]->name = $ip;
 				set_xen_env();
-				return xen_call($cmd, implode($args, ' '));
+				return xen_call($cmd, implode(' ', $args));
 			}
 			throw new ErrorException("Xen returned error: $returnMe");
 		}

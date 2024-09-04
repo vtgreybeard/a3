@@ -14,15 +14,8 @@ MEM=`/usr/local/sbin/javaMem`
 SCRIPT=$(readlink -f "$0")
 # Absolute path this script is in, thus /home/user/bin
 BASEDIR=$(dirname "$SCRIPT")
-JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
 
-if [ "$vers" == "bullseye" ]; then
-	JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-else
-	# Remove conflicting JARs for Java 8
-	rm -f ${BASEDIR}/jaxb-runtime-2.3.2.jar
-	rm -f ${BASEDIR}/jakarta.xml.bind-api-2.3.2.jar
-fi
+JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 
 
 

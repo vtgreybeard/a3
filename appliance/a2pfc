@@ -24,27 +24,28 @@ function usage(){
         die("Please choose: pre or post\n");
 }
 
-# Pre is run before startEngine since java has needs
+# Pre is run before startEngine but AFTER ADS is mounted (we use nimbusdb alot)
 if($mode == "pre"){
-	checkADSShare();
+	$hostIP = getSetting("hostIP");
+	if(empty($hostIP)){
+		$hostIP = trim(shell_exec("hostname -I"));
+		setSetting("hostIP", $hostIP);
+	}
+	$id = setInstallID();
+	echo "Alike InstallID: $id\n";
 	// set smb passwords
 	updateLocalUsers();
-	updateHostname();
-	// set passwd
-
-	echo "Syncing new DB settings to ADS\n";
-	exec("/usr/local/sbin/dbSyncer /home/alike/Alike/DBs/nimbusdb.db");
-
 	$cnf = makeMungeConf();
 	echo "Backup Data transfer port bound to: $cnf\n";
 
+	// is this necessary now?
+	echo "Syncing new DB settings to ADS\n";
+	exec("/usr/local/sbin/dbSyncer /home/alike/Alike/DBs/nimbusdb.db");	
+
+	return; // The below is only needed for instaBoot features, currently not available
+
 	echo "Checking A3 SR Setup\n";
 	echo makeInstaConfigs();
-
-	echo "Starting background tasks...";
-	popen("su - alike -c '/usr/local/sbin/gatherMetrics'", "r");
-	popen("su - alike -c '/usr/local/sbin/managerTasks'", "r");
-	echo " complete.\n";
 
 	echo "Enabling Xen-specific safety measures for A3 \n";
 	applyXenSafety();
@@ -67,6 +68,17 @@ if($mode == "post"){
 
 	echo "Resuming any paused ABDs\n";
 	findAndUnpauseABDs();
+}
+
+function setInstallID(){
+        $id = getSetting("installID");
+        if(empty($id)){
+		syslog(LOG_WARNING, "Failed to find installID in nimbusDB!");
+		return;
+        }
+        file_put_contents("/home/alike/Alike/inst.id",$id);
+        file_put_contents("/mnt/ads/guid.id",$id);
+        return $id;
 }
 
 
@@ -126,35 +138,22 @@ function makeInstaConfigs(){
 		echo "SR UUID: ". $d["sr-uuid"] ."\n";
 	}
 }
-function makeMungeConf(){
-        $db = "/home/alike/Alike/DBs/nimbusdb.db";
-        $dbc = new PDO("sqlite:$db");
 
-        $sql = "select val from settings where name= ?";
-        $stmt = $dbc->prepare($sql);
-        $stmt->execute(array("hostIP" ));
-        $ip= $stmt->fetchColumn();
-        $sql = "select val from settings where name= ?";
-        $stmt = $dbc->prepare($sql);
-        $stmt->execute(array("mungePort" ));
-        $port= $stmt->fetchColumn();
+function makeMungeConf(){
+	$ip = getSetting("hostIP");
+	$port = getSetting("mungePort");
         if(empty($port) || $port ==""){ $port = "2811"; }
         $key = strtoupper(md5(mt_rand(1,1000000)) );
         $cont = "$ip,$port,$key";
-
         file_put_contents("/home/alike/Alike/agentShare/munge.conf",$cont);
         return "$ip:$port";
 }
 
 
 function updateLocalUsers(){
-	$sql = "SELECT val from settings where name='uiPass'";
-	$pass = dbGetColumn("nimbus", $sql);
-//	updateUser("alike", $pass);
+	$pass = getSetting("uiPass");
 	updateSMBUser("alike", $pass);
-
-	$sql = "SELECT val from settings where name='dataStorePass'";
-	$pass = dbGetColumn("nimbus", $sql);
+	$pass = getSetting("dataStorePass");
 	updateSMBUser("ads", $pass);
 }
 
@@ -168,16 +167,6 @@ function updateSMBUser($user, $pass){
 	$pass = addslashes($pass);
 	$cmd = sprintf("echo '%s\n%s\n%s' | smbpasswd -s -a %s", $pass, $pass, $pass, $user);
         exec($cmd);
-}
-
-function checkADSShare(){
-	$ip = getHostIP();
-	if(empty($ip)){
-		die("Could not fine hostIP in DB!\n");
-	}
-	$share = "//$ip/ads/";
-	$sql ="REPLACE into settings (name,val) VALUES('dataStoreShare',?)";
-	dbSet("nimbus", $sql, array($share) );
 }
 
 

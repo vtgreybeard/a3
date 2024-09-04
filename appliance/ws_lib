@@ -498,9 +498,8 @@ function getStatus(){
 		$r["showInitialWelcome"] = "false";
 	}
 	
-	$ads = getStat("dataStoreShare");
 	$adsDefined = "true";
-	if($ads == ""){ $adsDefined ="false"; }
+	if(file_exists("/mnt/ads/nods")){ $adsDefined ="false"; }
 	$r["ADSDefined"] = $adsDefined;
 
 	$r["ADSReady"] = testADSPath();

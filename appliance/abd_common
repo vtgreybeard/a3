@@ -234,10 +234,11 @@ function abdMountADS($ip){
 	$res = runAbdCmd($ip, $cmd);
 	if(empty($res)){
 		$hip = getHostIP();
-//		$share = substr(getSetting("dataStoreShare"), 0, -1);
 		$share = "//$hip/ADS";
 		$adsPass = getSetting("dataStorePass");
 		$adsUser = getSetting("dataStoreUser");
+		if(empty($adsPass)){ $adsPass = "ads"; }
+		if(empty($adsUser)){ $adsUser = "ads"; }
 		$cmd = "/bin/mount -t cifs $share /mnt/ADS -o vers=3.0,username=$adsUser,password=$adsPass,cache=none";
 		$res = runAbdCmd($ip, $cmd);
 	}
@@ -252,7 +253,8 @@ function abdMountRestore($ip){
 	$res = runAbdCmd($ip, $cmd);
 	if(empty($res)){
 		$res = runAbdCmd($ip, "mkdir /mnt/restore");
-		$share = substr(getSetting("dataStoreShare"), 0, -4). "restore";
+		$hip = getHostIP();
+		$share = "//$hip/restore";
 		$adsPass = getSetting("dataStorePass");
 		$adsUser = getSetting("dataStoreUser");
 		$cmd = "/bin/mount -t cifs $share /mnt/restore -o vers=3.0,username=$adsUser,password=$adsPass,cache=none";
@@ -831,7 +833,6 @@ function doPoolImport($hostId){
 
 	$h = getHost($hostId);
 	xen_connect($hostId);
-
 	$srId = trim(xen_call("pool-param-get", "param-name=default-SR", "uuid=$h->poolID" ));	// use the pool's default SR
 
 	$temps = checkForExistingTemplate();

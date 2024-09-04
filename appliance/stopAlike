@@ -8,7 +8,7 @@ include_once("/usr/local/sbin/shared_lib");
 
 if(amRoot()==false){
 	echo "Stopping Alike services, please wait.\n";
-	$args = join($argv, " ");
+	$args = join(" ",$argv);
 	echo shell_exec("sudo $args");
 	return;
 }

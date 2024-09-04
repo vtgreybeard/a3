@@ -7,7 +7,7 @@ $GLOBALS["BIN_PATH"]="/usr/local/sbin";
 $GLOBALS["ALIKE_HOME"]="/home/alike/Alike";
 if(amRoot() ==false){ 
 	echo "Starting Alike services, please wait.\n";
-        $args = join($argv, " ");
+        $args = join(" ", $argv);
         echo shell_exec("sudo $args");
 	exit;
 }

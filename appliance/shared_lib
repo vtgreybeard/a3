@@ -1473,8 +1473,6 @@ function setProxyEnv(){
 
 function setSettingSync($name, $val){
 
-	if($name == "smtpPassword"){ $val = obfuscate($val); }
-
 	$sql = "INSERT OR REPLACE INTO Settings (name,val) VALUES (?, ?)";
 	dbSet("nimbus",$sql, array($name, $val));
 
@@ -1729,7 +1727,7 @@ function getSubscriptionDetails(){
 }
 
 function editHost($host){
-	$pass = obfuscate($host->password);
+	$pass = $host->password;
 	$sql = "UPDATE host set hostName=?, username=?, password=?, key=? where uuid=?";
 	$lic = "";
 	if($host->licensed){ $lic = "licensed"; }
@@ -1761,7 +1759,7 @@ function editAuthProfile($ap){
 		$sql = "UPDATE AuthProfile set isDefault=0";
 		dbSet("nimbus", $sql);
 	}
-	$pass = obfuscate($ap->password);
+	$pass = $ap->password;
 	if($ap->id==0){ 
 		$sql = "INSERT into AuthProfile VALUES (NULL, ?, ?, ?, ?, ?)";
 		dbSet("nimbus", $sql, array($ap->profileName, $ap->username, $pass, $ap->domain, $def ));
@@ -2381,7 +2379,7 @@ function convertHostObject($j){
 	$h->type = $j->virtType;
 	$h->role = $j->role;
 	$h->username = $j->username;
-	$h->password = unobfuscate($j->password);
+	$h->password = $j->password;
 	$h->lastUsed = $j->lastUsed;
 	$h->uuid = $j->uuid;
 	$h->poolID = $j->poolID;
@@ -2467,7 +2465,7 @@ function doAddHost($h){
 
 	$pass = "";
 	// scramble it for ourselves
-	if($h->type != 10){ $pass = obfuscate($h->password); }
+	$pass = $h->password; 
 
 	if(haveHost($h->guid)){
 		$sql = "UPDATE HOST set hostname=?, username=?, password=?, key=?  where uuid=?";

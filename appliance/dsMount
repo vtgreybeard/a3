@@ -1,0 +1,93 @@
+#!/usr/bin/php -q
+<?php
+
+include_once("/usr/local/sbin/shared_lib");
+include_once("/usr/local/sbin/common_lib");
+
+function usage(){
+	echo "Usage:\n";
+	echo "\t<ads|ods>\n";
+	exit();
+}
+
+if($argc < 2){
+	usage();
+}
+$type = $argv[1];
+
+
+if ($type != "ads" && $type !="ods"){
+	echo "Datastore type invalid ($stype)\nPlease choose either ads or ods\n";
+	usage();
+}
+
+if ($type == "ads"){
+
+	if(isADSMounted()){
+		echo "dsMount ads called but ADS is already mounted.\n";
+		exit(0);
+	}
+
+	$ADS="/mnt/ads";
+	$adsMnt = "/home/alike/configs/mount-ads.sh";
+	if(file_exists($adsMnt)){
+		$res = shell_exec($adsMnt);
+		echo "Mounting ADS from script ($adsMnt)\n";
+		echo "Mount results: $res\n";
+	}else{
+		echo "No ADS Mount script found!\n";
+		exit(1);
+	}
+
+	if (!isADSMounted() ){
+		syslog(LOG_ERR, "Failed to detect ADS after it was mounted");
+		exit(1);
+	}
+	echo "Restoring DBs from ADS\n";
+	# clean out any random stale wal/shm files to prevent false malformed errors
+	exec("rm -f /mnt/ads/prodDBs/*.db-wal");
+	exec("rm -f /mnt/ads/prodDBs/*.db-shm");
+
+	exec("cp -f /mnt/ads/prodDBs/* /home/alike/Alike/DBs/");
+	exec("chown -R alike:alike /home/alike/Alike/DBs");
+	exec("ln -sf /mnt/ads/cbtTemp /home/alike/Alike/cbtTemp");
+	
+	// do manager thing if needed
+	echo "Importing settings to manager.db\n";
+	$cmd = "su - alike -c '/usr/local/sbin/managerAdmin import'";
+	exec($cmd);
+	exec("chown alike:alike /home/alike/Alike/DBs/manager.db");
+
+	// now that we have an ADS, customize local settings from our DBs
+        $hostIP = getSetting("hostIP");
+        if(empty($hostIP)){
+                $hostIP = trim(shell_exec("hostname -I"));
+                setSetting("hostIP", $hostIP);
+        }
+        $id = setInstallID();
+        echo "Alike InstallID: $id\n";
+        // set smb passwords
+        updateLocalUsers();
+        $cnf = makeMungeConf();
+        echo "Backup Data transfer port bound to: $cnf\n";
+
+	exit(0);
+
+} else if ($type == "ods"){
+	if(isODSMounted()){
+		echo "dsMount ods called but ODS is already mounted.\n";
+		exit(0);
+	}
+	$odsMnt = "/home/alike/configs/mount-ods.sh";
+	if(file_exists($odsMnt)){
+		$res = shell_exec($odsMnt);
+		echo "Mounting ODS from script ($odsMnt)\n";
+		echo "Mount results: $res\n";
+		exit(0);
+	}else{
+		echo "No ODS Mount script found\n";
+	}
+	exit(1);
+}
+
+?>

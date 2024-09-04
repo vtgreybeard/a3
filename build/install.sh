@@ -129,6 +129,7 @@ mkdir -p /home/alike/Alike/DBs/
 mkdir -p /home/alike/Alike/remoteDBs/
 mkdir -p /home/alike/Alike/temp/
 mkdir -p /home/alike/Alike/agentShare/
+mkdir -p /home/alike/Alike/agentShare/repCache
 mkdir -p /mnt/instaboot/
 mkdir -p /mnt/instaboot/base/xen
 mkdir -p /mnt/instaboot/sr/xen
@@ -142,6 +143,19 @@ if [[ -f "/usr/local/sbin/goofys" ]]; then
 	wget https://github.com/kahing/goofys/releases/download/v0.24.0/goofys -O /usr/local/sbin/goofys
 	chmod 755 /usr/local/sbin/goofys
 fi
+
+openssl req -x509 -newkey rsa:4096 -keyout /home/alike/certs/privkey.pem -out /home/alike/certs/fullchain.pem -sha256 -days 36500 -nodes -subj "/ST=region/L=City/O=Alike Backup/OU=IT/CN=a3.local"
+
+useradd -M -s /sbin/nologin ads
+echo -e "ads\nads" | smbpasswd -s -a ads
+systemctl enable smbd.service
+systemctl start smbd.service
+systemctl enable nfs-kernel-server
+systemctl start nfs-kernel-server
+
+crontab -u alike /usr/local/sbin/alike_crontab
+rm /usr/local/sbin/alike_crontab
+
 
 echo "Configuring startup scripts"
 tee "/etc/systemd/system/a3.service" > /dev/null << EOF
@@ -187,4 +201,6 @@ chmod 755 /home/alike/Alike/hooks/*
 echo "Setup completed successfully!"
 
 echo "Welcome to the A3" > /etc/issue
-menu
+
+echo "Restarting to complete installation."
+reboot

@@ -168,8 +168,6 @@ function doAdvanced(){
 			return doLocalAuth();
 		}else if ($resp == "2"){
 			return doSupportTar();
-		}else if ($resp == "3"){
-			return doSafeMode();
 		}else if ($resp == "4"){
 			return doModeChange();
 		}else if ($resp == "5"){
@@ -283,32 +281,6 @@ function setMode($m){
 
 }
 
-function doSafeMode(){
-	if(getSvcStatus() ){
-		echo "\033[1;33mAlike is Running! \033[0m \n";
-		echo "Please stop the Alike Services before continuing.\n\n";
-		readline("Press any key to continue.");
-		return;
-	}
-	try{
-		$sf = getSetting("noXenStartup");
-		$val = 0;
-		$state = "disabled";
-		if($sf == 0){
-			$val = 1;
-			$state = "enabled";
-		}
-		setSetting("noXenStartup", $val);
-		echo "\"Safe\" Xen mode $state\n";
-	}catch(Exception $ex){
-		echo "Error setting Xen mode:\n";
-		echo $ex->getMessage() ."\n";
-	}
-	echo "Press any key to continue\n";
-	trim(fgets(STDIN));
-	return;
-}
-
 function doSupportTar(){
 	echo "\nPreparing support archive...\n";
 	exec("/usr/local/sbin/makeSupportTar &>/dev/null");
@@ -354,7 +326,7 @@ function doServiceState(){
 			echo "Stop Alike Manager?\nLicensing requests will be unavailable for new jobs while the services are down.\n";
 		}
 		if(getYN() ){
-			exec("stopAlike");
+			echo shell_exec("/usr/local/sbin/stopAlike");
 		}else{
 			echo "No action taken";
 			return;
@@ -378,7 +350,7 @@ function doServiceState(){
 			}
 			echo "Starting Alike, please wait...";
 		}
-		exec("startAlike");
+		echo shell_exec("/usr/local/sbin/startEngine");
 	}
 }
 
@@ -418,7 +390,6 @@ function manageStorage(){
 		return configDS("ods");
 	}else if($resp == 9){
 		return adsTools();
-		//return registerADS();
 	}
 
 	return manageStorage();
@@ -611,14 +582,6 @@ function handleNewDS($type){
 		if(!haveADS()){
 			echo "This appears to be a new ADS.\n";
 			echo "Initializing new data-store.\n";
-//			echo "Would you like to initialize the default structure? (Y/n): ";
-//			$resp = getYN(true);
-//			if(!$resp){
-//				echo "Are you sure?\nAn uninitialized ADS will prevent Alike from functioning.\n";
-//				echo "Initialize the ADS? (Y/n): ";
-//				$resp = getYN(true);
-//				if(!$resp){  "Skipping ADS initialize...\n"; return;  }
-//			}
 			initDS($type);
 		}else{
 			$guid = "";
@@ -630,7 +593,6 @@ function handleNewDS($type){
 			echo "\nFound existing ADS $gText\n";
 			echo "Please choose an option:\n";
 		        echo opt(1)." Reconnect ADS (preserve GUID)\n";
-		        echo opt(2)." Register ADS and reconnect (regenerate GUID)\n";
 		        echo opt(3)." Cancel and unmount\n";
 		        $resp = getChoice();
 		        while($resp =="" || !is_numeric($resp)){
@@ -644,15 +606,11 @@ function handleNewDS($type){
 			} else if($resp == 1){
 				echo "ADS Reconnected $gText\n";
 				return;
-			}else if($resp == 2){
-				registerADS(); // we need to register our installID
-				return;
 			}
 
 		}
 	}else if($type == "ods"){
 		if(!haveODS()){
-		//if( !file_exists("/mnt/ods/transact.tx") ){
 			echo "This appears to be a new ODS.\n";
 			echo "Would you like to initialize the default structure? [Required if new] (y/n): ";
 			$resp = getYN(true);
@@ -664,30 +622,11 @@ function handleNewDS($type){
 	}
 }
 
-function registerADS(){
-	echo "Please wait, refreshing system libraries...";
-	exec("sudo docker pull quadricsoftware/a3-tool");
-	echo "Complete.\n";
-	$ip = getIP();
-	$hip = "hostIP=$ip";
-	$out =  managedRun("sudo docker run -v /mnt/ads:/ads quadricsoftware/a3-tool register $hip");
-	if($out->code != 0){
-		echo "Error creating new ADS!\n";
-		echo "Code: $out->code, Error: $out->stdOut ($out->stdErr)";
-	}
-	echo "\nPress any key to continue";
-	fgets(STDIN);
-	return $out->code;
-}
-
 function initDS($type){
-	echo "Please wait, refreshing system libraries...";
-	exec("sudo docker pull quadricsoftware/a3-tool");
-	echo "Complete.\n";
 	echo "Creating a new $type\n";
 	if($type=="ads"){
 		exec("sudo chown -R alike:alike /mnt/ads");
-		$bs = "blockSize=2048";
+		$bs = 2;
 		echo "BlockSize: 2MB  Change? (y/N): ";
 		$resp = getYN(true);
 		if($resp){
@@ -698,31 +637,15 @@ function initDS($type){
 				echo "Enter your desired block-size in MB. [2, 4, 6, or 8]: ";
 				$resp = trim(fgets(STDIN));
 			}
-			$nbs = $resp * 1024;
-			$bs="blockSize=$nbs";
+			$bs = $resp ;
 		}
-		$enc = "0";
-		echo "Enable block encryption? (y/N): ";
-		$resp = getYN(true);
-		if($resp){
-			echo "Please enter your encryption key.\n";
-			echo "Please record this safely.\n";
-			echo "(Blank to skip)\n";
-			$key = trim(fgets(STDIN));
-			if(!empty($key)){
-				$enc = "encKey=$key";
-			}
-		}
-		$ip = getIP();
-		$hip = "hostIP=$ip";
 		echo "Building ADS, please wait...\n";
-		echo shell_exec("sudo docker run -v /mnt/ads:/ads quadricsoftware/a3-tool ads $bs $enc $hip");
-		exec("sudo docker volume rm alike_instaboot > /dev/null 2>&1");
+		echo shell_exec("sudo dsCreator -t ads -s $bs");
 		echo "\nPress any key to continue";
 		fgets(STDIN);
 	}else{
-		exec("sudo chown -R alike:alike /mnt/ods");
-		echo shell_exec("sudo docker run -v /mnt/ods:/ods quadricsoftware/a3-tool ods");
+		exec("sudo chown -R alike:alike /mnt/ods1");
+		echo shell_exec("sudo dsCreator -t ods ");
 	}
 }
 
