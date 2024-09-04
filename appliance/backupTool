@@ -1340,7 +1340,7 @@ function doPurge($jobid, $vmid, $schedID, $siteID=0){
 		$gfsLock = qflock($fn, 60);
 		$ndbLock = qflock($fn2, 60);
                 $bks = "/home/alike/Alike/BackupScheduler.exe";
-                $cmd = "/usr/local/bin/wine $bks -p $jobid $vmid $schedID $siteID 2>/dev/null";
+                $cmd = "wine $bks -p $jobid $vmid $schedID $siteID 2>/dev/null";
                 $res=-1;
                 $out = array();
                 exec($cmd,$out,$res);
