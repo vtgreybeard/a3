@@ -98,8 +98,6 @@ if [ "$silent" = false ]; then
 	parted openssh-client openssh-server openssh-sftp-server openssl net-tools wireguard gdisk bindfs \
 	nfs-kernel-server nginx lsb-release lsof lz4 kpartx logrotate mono-complete \
 	fuse dos2unix curl apt apt-listchanges apt-utils util-linux-locales util-linux vim gawk php php-fpm php-cli php-cgi php-sqlite3 php-curl php-mbstring --no-install-recommends;
-	systemctl enable nginx
-	systemctl start nginx
 fi
 
 # Now move onto the Alike software 
@@ -149,9 +147,8 @@ openssl req -x509 -newkey rsa:4096 -keyout /home/alike/certs/privkey.pem -out /h
 useradd -M -s /sbin/nologin ads
 echo -e "ads\nads" | smbpasswd -s -a ads
 systemctl enable smbd.service
-systemctl start smbd.service
 systemctl enable nfs-kernel-server
-systemctl start nfs-kernel-server
+systemctl enable nginx
 
 
 
