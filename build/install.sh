@@ -153,8 +153,6 @@ systemctl start smbd.service
 systemctl enable nfs-kernel-server
 systemctl start nfs-kernel-server
 
-crontab -u alike /usr/local/sbin/alike_crontab
-rm /usr/local/sbin/alike_crontab
 
 
 echo "Configuring startup scripts"
@@ -177,6 +175,7 @@ dpkg -i ../binaries/xapi-xe_1.249.3-2_amd64.deb
 
 echo "Installing crontab"
 /usr/bin/crontab -u alike ../appliance/alike_crontab;
+rm ../appliance/alike_crontab;
 
 cp ../configs/nginx.conf /home/alike/configs/
 cp ../configs/*.pem /home/alike/certs/
