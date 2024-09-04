@@ -205,6 +205,7 @@ if [ -d "../hooks" ]; then
 fi
 cp ../appliance/* /usr/local/sbin/
 cp ../binaries/*.dll /usr/local/sbin/
+mv ../binaries/BackupScheduler.exe /home/alike/Alike/
 cp ../binaries/*.exe /usr/local/sbin/
 cp -r ../binaries/java/* /home/alike/Alike/java/
 cp ../binaries/abd.dat.7z /home/alike/Alike/ext/
