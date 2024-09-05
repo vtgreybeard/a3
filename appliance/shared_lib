@@ -2460,11 +2460,8 @@ function doAddHost($h){
 	$id=0;
 	$base = $GLOBALS['settings']->alikeRoot;
 	$tcp =443;
-	$key="";
-	if($h->licensed){ $key = "licensed"; }
+	$key="licensed";
 
-	$pass = "";
-	// scramble it for ourselves
 	$pass = $h->password; 
 
 	if(haveHost($h->guid)){
@@ -2505,9 +2502,6 @@ function doAddHost($h){
 	}
 
         if($h->type == 2){
-                exec("sudo /usr/local/sbin/setupNfs /dev/null ");
-                $res = shell_exec("/usr/local/sbin/instaAdmin plugSrToHost $id");
-                syslog(LOG_INFO,"Ran plugSrToHost $id, results: $res");
                 $cmd = "sudo /usr/local/sbin/abdAdmin import $id > /dev/null &";
                 exec($cmd);
         }
