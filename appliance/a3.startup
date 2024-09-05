@@ -38,6 +38,14 @@ if($res == 1){
 }
 exec("/usr/local/sbin/dsMount ods", $out, $res);
 
+$idf = "/home/alike/Alike/inst.id";
+if(!file_exists($idf)){
+	$id = makeGuid();
+	file_put_contents($idf,$id);
+	file_put_contents("/mnt/ads/guid.id",$id);
+	setSetting("installID", $id);
+}
+
 
 echo "Starting Alike services...";
 exec("/usr/local/sbin/startEngine");
