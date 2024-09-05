@@ -1,4 +1,9 @@
-# alike
+# Alike Backup
+
+## Note: ## 
+### This project has been migrated to: [AlikeBackup/A3](https://github.com/alikebackup/a3) ###
+
+---
 
 This is is an attempt to reforge the final Alike Backup (A3) into the preview/unreleased Alike v7.5 that had been in use by beta-testers and partners.
 The A3 host appliance is now available to built from sources (see below), instead of as a pre-built XVA download.
@@ -9,7 +14,6 @@ This project's goal is to eliminate the Docker layer, and move the Alike softwar
 
 
 # Current Build Process #
-At present, this project has only been tested on Debian 12.5, but it will likely work on other (modern) Debian based systems. To create the new A3, you can use the Debian "preseed" process, by using the following URL as the script during an automated install. This will provide the base OS and all required packages for Alike to run.  After the installation completes, you will then be prompted to run a single command which will pull the latest build of the Alike software, and install it locally.
 ##Steps##
 1. Boot your system with a Debian 12.x ISO.  Please be sure the sytem has at least 32GB of disk, and 1-2GB ram minimum.
 Use the preseed config:
@@ -17,7 +21,6 @@ Use the preseed config:
 https://raw.githubusercontent.com/vtgreybeard/a3/main/build/a3.cfg
 1. Once the base OS install is complete, login as root with the user "alike"  (Please change ASAP)
 1. Then follow the steps presented on screen, which at present are:
-2. 
   wget -O - https://raw.githubusercontent.com/vtgreybeard/a3/main/build/a3_install.sh | bash
 1. This will install the Alike software and services.
 1. Add/configure your backup storage (ADS)
