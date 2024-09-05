@@ -13,9 +13,11 @@ At present, this project has only been tested on Debian 12.5, but it will likely
 ##Steps##
 1. Boot your system with a Debian 12.x ISO.  Please be sure the sytem has at least 32GB of disk, and 1-2GB ram minimum.
 Use the preseed config:
+
 https://raw.githubusercontent.com/vtgreybeard/a3/main/build/a3.cfg
 1. Once the base OS install is complete, login as root with the user "alike"  (Please change ASAP)
 1. Then follow the steps presented on screen, which at present are:
+2. 
   wget -O - https://raw.githubusercontent.com/vtgreybeard/a3/main/build/a3_install.sh | bash
 1. This will install the Alike software and services.
 1. Add/configure your backup storage (ADS)
