@@ -1,5 +1,6 @@
 #!/usr/bin/php -q
 <?php
+include_once("common_lib");
 
 echo "Starting A3 Node\n";
 
@@ -58,26 +59,6 @@ exec("echo 1 > /tmp/sched_svc_status");
 echo "A3 Node startup complete.\n";
 
 exit(0);
-
-function getSetting($set){
-        $db = "/home/alike/Alike/DBs/nimbusdb.db";
-        $dbc = new PDO("sqlite:$db");
-
-        $sql = "select val from settings where name= ?";
-        $stmt = $dbc->prepare($sql);
-        $stmt->execute(array($set ));
-        $val= $stmt->fetchColumn();
-	return $val;
-}
-function setSetting($key, $val){
-        $db = "/home/alike/Alike/DBs/nimbusdb.db";
-        $dbc = new PDO("sqlite:$db");
-        $sql = "INSERT or REPLACE INTO settings values(?,?)";
-        $st = $dbc->prepare($sql);
-        $res = $st->execute(array($key, $val) );
-}
-
-
 
 function runAndTail($cmd){
     $desc = array(
